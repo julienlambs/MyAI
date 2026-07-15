@@ -1,0 +1,7 @@
+.venv/
+.venv-linux/
+__pycache__/
+*.pyc
+.env
+.env.linux
+projects.local.json

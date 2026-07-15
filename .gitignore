@@ -1,0 +1,44 @@
+# Secrets / état local — jamais versionnés
+backend/vapid_private.pem
+backend/push_subscriptions.json
+backend/history.db
+backend/history.db-wal
+backend/history.db-shm
+backend/.env
+backend/.env.linux
+backend/uvicorn.out.log
+backend/uvicorn.err.log
+
+# Environnements Python
+backend/.venv/
+backend/.venv-linux/
+**/__pycache__/
+*.pyc
+
+# Dépendances Node
+frontend/node_modules/
+
+# Build
+frontend/dist/
+
+# Éditeurs / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Notes/mémoire de travail perso — jamais versionnées (repo public)
+CLAUDE.md
+AGENTS.md
+.agents/
+.claude/
+.qwen/
+dualbootinstallguide.md
+audit_securite_qwen.md
+bug-blackwell-qwen-moe.md
+docs/
+design_handoff_myai_interface/
+101claudecodetips_abattle-testedfieldguideforagenticcoding.pdf
+
+# Liste réelle de projets (révèle des dossiers perso) — projects.json reste
+# générique et versionné, projects.local.json (si présent) prend le dessus
+backend/projects.local.json
