@@ -15,12 +15,12 @@ export default function DiffView({ diff }) {
   const oldTruncated = oldLines.length > MAX_LINES
   const newTruncated = newLines.length > MAX_LINES
   return (
-    <div className="diff-view">
+    <div className="diff-view coupe">
       {oldLines.slice(0, MAX_LINES).map((l, i) => <div key={`o${i}`} className="diff-line diff-remove">− {l || ' '}</div>)}
-      {oldTruncated && <div className="diff-line-truncated">— {oldLines.length - MAX_LINES} lignes supprimées non affichées —</div>}
+      {oldTruncated && <div className="diff-line-truncated">{oldLines.length - MAX_LINES} lignes supprimées non affichées.</div>}
       {newLines.slice(0, MAX_LINES).map((l, i) => <div key={`n${i}`} className="diff-line diff-add">+ {l || ' '}</div>)}
-      {newTruncated && <div className="diff-line-truncated">— {newLines.length - MAX_LINES} lignes ajoutées non affichées —</div>}
-      {diff.truncated && <div className="diff-line-truncated">— fichier tronqué, trop volumineux pour un diff complet —</div>}
+      {newTruncated && <div className="diff-line-truncated">{newLines.length - MAX_LINES} lignes ajoutées non affichées.</div>}
+      {diff.truncated && <div className="diff-line-truncated">Fichier tronqué : trop volumineux pour un diff complet.</div>}
     </div>
   )
 }

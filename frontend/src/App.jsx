@@ -9,13 +9,14 @@ import { AgentSocketProvider } from './lib/useAgentSocket'
 import { ThemeProvider } from './lib/useTheme'
 import { PanelBridgeProvider } from './lib/usePanelBridge'
 import { DialogProvider } from './lib/useDialogs'
+import { useViseurFocus } from '@declic/ui'
 
 const ORDER = ['chat', 'files', 'terminal']
 const SHORTCUT_TO_PANEL = { '1': 'chat', '2': 'files', '3': 'terminal' }
 // e.code (position physique, indépendant du NumLock) plutôt que e.key — pour
 // cibler précisément le pavé numérique sans toucher aux touches 1/2/3 du haut.
 const NUMPAD_TO_PANEL = { Numpad1: 'chat', Numpad2: 'files', Numpad3: 'terminal' }
-const MOBILE_QUERY = '(max-width: 768px)'
+const MOBILE_QUERY = '(max-width: 839.98px)'
 const SWIPE_MIN_DISTANCE = 60
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
   // pas besoin de connaître la hauteur réelle disponible pour ce cas-là.
   const [card1Height, setCard1Height] = useState(null)
   const mainRowRef = useRef(null)
+  useViseurFocus()
 
   // Raccourcis clavier globaux ⌘1/⌘2/⌘3 (Ctrl sous Windows/Linux), + pavé
   // numérique seul (sans modificateur) comme alternative rapide.

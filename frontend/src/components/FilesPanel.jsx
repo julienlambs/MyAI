@@ -3,11 +3,13 @@ import { useAgentSocket } from '../lib/useAgentSocket'
 import { usePanelBridge } from '../lib/usePanelBridge'
 import { useDialogs } from '../lib/useDialogs'
 import FilePreview from './FilePreview'
+import { Btn, Field, IconBtn, Icone, Touche } from '@declic/ui'
+import { MenuPop, MenuItem, MenuSep } from './MenuPop'
 
 // Toutes les lignes de l'arbre font la même hauteur (une seule ligne de
 // texte) — doit rester vrai pour tout ajout futur dans la même liste
 // (renommage/création inline, Lot 8), sinon le calcul par index casse.
-const ROW_HEIGHT = 27
+const ROW_HEIGHT = 28 // = hauteur de .tree-row dans index.css
 const VIRTUALIZE_THRESHOLD = 150
 const OVERSCAN = 8
 
@@ -104,22 +106,22 @@ function gitBadge(code, summary) {
   return { ...meta, title: summary ?? meta.title }
 }
 
+// Icônes de la charte (icones/) : une famille par type de fichier, pas une par extension.
 const FILE_ICONS = {
-  py: '🐍', js: '📜', jsx: '📜', mjs: '📜', ts: '📜', tsx: '📜',
-  json: '🧩', md: '📝', css: '🎨', html: '🌐',
-  png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', svg: '🖼️', webp: '🖼️', ico: '🖼️',
-  pdf: '📕', txt: '📄', log: '📄',
-  yml: '⚙️', yaml: '⚙️', toml: '⚙️', ini: '⚙️', cfg: '⚙️',
-  sh: '🖥️', bat: '🖥️', ps1: '🖥️',
-  env: '🔐', lock: '🔒',
-  db: '🗄️', sqlite: '🗄️', sqlite3: '🗄️',
-  zip: '🗜️', gz: '🗜️', tar: '🗜️',
-  woff: '🔤', woff2: '🔤', ttf: '🔤', otf: '🔤',
+  py: 'code', js: 'code', jsx: 'code', mjs: 'code', ts: 'code', tsx: 'code', css: 'code',
+  json: 'donnees', html: 'globe',
+  png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', svg: 'image', webp: 'image', ico: 'image',
+  yml: 'reglages', yaml: 'reglages', toml: 'reglages', ini: 'reglages', cfg: 'reglages',
+  sh: 'terminal', bat: 'terminal', ps1: 'terminal',
+  env: 'cle', lock: 'verrou',
+  db: 'base-de-donnees', sqlite: 'base-de-donnees', sqlite3: 'base-de-donnees',
+  zip: 'paquet', gz: 'paquet', tar: 'paquet',
+  woff: 'police', woff2: 'police', ttf: 'police', otf: 'police',
 }
 
 function fileIcon(name) {
   const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : ''
-  return FILE_ICONS[ext] ?? '📄'
+  return <Icone nom={FILE_ICONS[ext] ?? 'fichier'} />
 }
 
 const IMAGE_EXTS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'svg'])
@@ -163,6 +165,8 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
   const [scrollTop, setScrollTop] = useState(0)
   const [viewportHeight, setViewportHeight] = useState(0)
   const [createMenuOpen, setCreateMenuOpen] = useState(false)
+  const sortBtnRef = useRef(null)
+  const createBtnRef = useRef(null)
 
   // (Re)charge la racine quand le dossier de session change (nouvelle session)
   // — ramène aussi l'explorateur au dossier du projet si on avait navigué
@@ -324,20 +328,6 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
     return () => { cancelled = true; clearTimeout(timer) }
   }, [filter, showHidden, searchMode, root])
 
-  // Ferme le menu contextuel au clic ailleurs ou à l'échap — un seul listener
-  // global, pas un par ligne.
-  useEffect(() => {
-    if (!contextMenu) return
-    function close() { setContextMenu(null) }
-    function onKey(e) { if (e.key === 'Escape') setContextMenu(null) }
-    window.addEventListener('click', close)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('click', close)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [contextMenu])
-
   // Fait "vieillir" le highlight des fichiers récents sans action de l'utilisateur.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000)
@@ -458,7 +448,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
   async function handleDelete(items) {
     if (items.length === 0) return
     const label = items.length > 1 ? `${items.length} éléments` : items[0].name
-    if (!(await confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`))) return
+    if (!(await confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`, { action: 'Supprimer', danger: true }))) return
     const hasFolder = items.some((it) => it.type === 'folder')
     for (const item of items) {
       try {
@@ -550,112 +540,97 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
     : rows.length
   const visibleRows = virtualize ? rows.slice(virtualStart, virtualEnd) : rows
 
+  function gitBadgeEl(r) {
+    const badge = gitBadge(r.gitStatus, r.gitSummary)
+    return badge && (
+      <span className="git-badge" style={{ color: badge.color }} data-tip={badge.title} aria-label={badge.title}>{badge.label}</span>
+    )
+  }
+
+  const selCount = selectedPaths.size
+
   return (
-    <div className="panel is-main" style={{ gridArea }} data-slot={gridArea}>
+    <div className="panel is-main coupe" style={{ gridArea }} data-slot={gridArea}>
       <div className="panel-full">
         <div className="section-header">
           <div className="section-title-row">
             <div className="section-title">
-              <span className="sym">◎</span>
-              <span className="name">Explorateur</span>
-              <span className="pill">{countLoaded(childrenByPath, showHidden)} fichiers</span>
+              <Icone nom="dossier" className="sym" />
+              <h2 className="name">Explorateur</h2>
+              <span className="badge cut bg-neu">{countLoaded(childrenByPath, showHidden)} fichiers</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="section-actions">
               {variant !== 'full' && (
-                <button
-                  className="btn"
-                  style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, width: 24, height: 24, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={onActivate}
-                  title="Agrandir ce panneau"
-                >
-                  ⤢
-                </button>
+                <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
               )}
-              <span className="kbd">⌘2</span>
+              <span className="kbd"><Touche>Ctrl 2</Touche></span>
             </div>
           </div>
           <div className="files-breadcrumb">
-            <button
-              className="btn files-toggle"
+            <IconBtn
+              kind="ghost"
               onClick={goToParent}
               disabled={!parentAvailable}
-              title={parentAvailable ? 'Remonter au dossier parent' : 'Déjà à la racine du disque'}
-            >
-              ⬆
-            </button>
-            <span className="files-root-path" title={root ?? ''}>{root ?? '—'}</span>
+              label={parentAvailable ? 'Remonter au dossier parent' : 'Déjà à la racine du disque'}
+              icon={<Icone nom="monter" />}
+            />
+            <span className="files-root-path" data-tip={root ?? ''}>{root ?? '—'}</span>
             {root !== cwd && (
-              <button className="btn files-toggle" onClick={goHome} title="Revenir au dossier du projet">
-                🏠
-              </button>
+              <IconBtn kind="ghost" onClick={goHome} label="Revenir au dossier du projet" icon={<Icone nom="accueil" />} />
             )}
           </div>
           <div className="files-toolbar">
-            <input
-              className="files-search"
-              placeholder={searchMode === 'content' ? 'Rechercher dans le contenu…' : 'Filtrer les fichiers…'}
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
-            <button
-              className={`btn files-toggle${searchMode === 'content' ? ' active' : ''}`}
+            <div className="files-search">
+              <Field
+                label={searchMode === 'content' ? 'Rechercher dans le contenu' : 'Filtrer les fichiers'}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              />
+            </div>
+            <IconBtn
+              kind={searchMode === 'content' ? 'pri' : 'sec'}
+              aria-pressed={searchMode === 'content'}
               onClick={() => { setSearchMode((m) => (m === 'content' ? 'name' : 'content')); setFilter('') }}
-              title={searchMode === 'content' ? 'Revenir à la recherche par nom' : 'Rechercher dans le contenu des fichiers'}
-            >
-              🔎
-            </button>
-            <button
-              className="btn files-toggle"
+              label={searchMode === 'content' ? 'Revenir à la recherche par nom' : 'Rechercher dans le contenu des fichiers'}
+              icon={<Icone nom="recherche" />}
+            />
+            <IconBtn
+              aria-pressed={showHidden}
               onClick={() => setShowHidden((v) => !v)}
-              title={showHidden ? 'Masquer les fichiers cachés / node_modules' : 'Afficher les fichiers cachés / node_modules'}
-            >
-              {showHidden ? '🙈' : '👁'}
-            </button>
-            <button
-              className={`btn files-toggle${refreshing ? ' spinning' : ''}`}
+              label={showHidden ? 'Masquer les fichiers cachés et node_modules' : 'Afficher les fichiers cachés et node_modules'}
+              icon={<Icone nom={showHidden ? 'oeil' : 'oeil-barre'} />}
+            />
+            <IconBtn
               onClick={refreshAll}
               disabled={refreshing}
-              title="Rafraîchir"
-            >
-              🔄
-            </button>
-            <div className="files-sort-wrap">
-              <button className="btn files-toggle" onClick={() => setSortMenuOpen((v) => !v)} title="Trier">⇅</button>
-              {sortMenuOpen && (
-                <div className="mobile-menu-dropdown files-sort-dropdown">
-                  {SORT_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => { setSortBy(opt.id); setSortMenuOpen(false) }}
-                      style={sortBy === opt.id ? { color: 'var(--accent)' } : undefined}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                  <button onClick={() => setFoldersFirst((v) => !v)}>
-                    {foldersFirst ? '☑' : '☐'} Dossiers d'abord
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="files-sort-wrap">
-              <button className="btn files-toggle" onClick={() => setCreateMenuOpen((v) => !v)} title="Créer à la racine">➕</button>
-              {createMenuOpen && (
-                <div className="mobile-menu-dropdown files-sort-dropdown">
-                  <button onClick={() => { setCreateMenuOpen(false); handleCreate('', 'file') }}>📄 Nouveau fichier</button>
-                  <button onClick={() => { setCreateMenuOpen(false); handleCreate('', 'folder') }}>📁 Nouveau dossier</button>
-                </div>
-              )}
-            </div>
+              label="Rafraîchir"
+              icon={refreshing ? <declic-loader size="16" mono /> : <Icone nom="recharger" />}
+            />
+            <IconBtn ref={sortBtnRef} label="Trier" icon={<Icone nom="trier" />}
+              aria-haspopup="menu" aria-expanded={sortMenuOpen} onClick={() => setSortMenuOpen((v) => !v)} />
+            <MenuPop anchorRef={sortBtnRef} open={sortMenuOpen} onClose={() => setSortMenuOpen(false)} width={220} label="Trier">
+              {SORT_OPTIONS.map((opt) => (
+                <MenuItem key={opt.id} label={opt.label} checked={sortBy === opt.id}
+                  onSelect={() => { setSortBy(opt.id); setSortMenuOpen(false) }} />
+              ))}
+              <MenuSep />
+              <MenuItem label="Dossiers d’abord" checked={foldersFirst} onSelect={() => setFoldersFirst((v) => !v)} />
+            </MenuPop>
+            <IconBtn ref={createBtnRef} label="Créer à la racine" icon={<Icone nom="ajouter" />}
+              aria-haspopup="menu" aria-expanded={createMenuOpen} onClick={() => setCreateMenuOpen((v) => !v)} />
+            <MenuPop anchorRef={createBtnRef} open={createMenuOpen} onClose={() => setCreateMenuOpen(false)} width={220} label="Créer">
+              <MenuItem icon="fichier" label="Nouveau fichier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'file') }} />
+              <MenuItem icon="dossier" label="Nouveau dossier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'folder') }} />
+            </MenuPop>
           </div>
         </div>
 
-        <div className="tree" tabIndex={0} onKeyDown={handleTreeKeyDown} onScroll={handleTreeScroll} ref={treeRef}>
-          {error && <div style={{ padding: 12, fontSize: 12, color: 'var(--hi)' }}>⚠ {error}</div>}
+        <div className="tree" tabIndex={0} aria-label="Arborescence des fichiers" onKeyDown={handleTreeKeyDown} onScroll={handleTreeScroll} ref={treeRef}>
+          {error && <div className="tree-error"><span className="badge cut bg-hi"><Icone nom="erreur" /> {error}</span></div>}
 
           {!error && isSearching && searchLoading && (
             <div className="empty-daemon">
-              <div><span className="caret">&gt;</span> myai.files.{searchMode === 'content' ? 'grep' : 'search'}("{filter}")</div>
+              <div><span className="caret">&gt;</span> myai.files.{searchMode === 'content' ? 'grep' : 'search'}(« {filter} »)</div>
               <div className="note">[note] recherche en cours…</div>
             </div>
           )}
@@ -663,12 +638,11 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
           {!error && isSearching && !searchLoading && searchMode === 'name' && (
             searchResults?.length ? searchResults.map((r) => {
               const isSelected = r.path === selectedPath || selectedPaths.has(r.path)
-              const icon = r.type === 'folder' ? '📁' : fileIcon(r.name)
               return (
                 <div
                   key={r.path}
-                  className={`tree-row${isSelected ? ' selected' : ''}`}
-                  style={{ paddingLeft: 12 }}
+                  className={`tree-row cut${isSelected ? ' selected' : ''}`}
+                  style={{ paddingLeft: 'var(--s-3)' }}
                   draggable={r.type === 'file'}
                   onDragStart={(e) => {
                     e.dataTransfer.setData('text/plain', absolutePath(root, r.path))
@@ -677,19 +651,14 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
                   onClick={(e) => handleRowClick(e, r)}
                   onContextMenu={(e) => handleRowContextMenu(e, r)}
                 >
-                  <span className="file-icon">{icon}</span>
-                  {(() => {
-                    const badge = gitBadge(r.gitStatus, r.gitSummary)
-                    return badge && (
-                      <span className="git-badge" style={{ color: badge.color }} title={badge.title}>{badge.label}</span>
-                    )
-                  })()}
+                  <span className="file-icon">{r.type === 'folder' ? <Icone nom="dossier" /> : fileIcon(r.name)}</span>
+                  {gitBadgeEl(r)}
                   <span className="search-result-path">{r.path}</span>
                 </div>
               )
             }) : (
               <div className="empty-daemon">
-                <div><span className="caret">&gt;</span> myai.files.search("{filter}")</div>
+                <div><span className="caret">&gt;</span> myai.files.search(« {filter} »)</div>
                 <div className="note">[note] aucun résultat.</div>
               </div>
             )
@@ -702,8 +671,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
               return (
                 <div
                   key={`${r.path}:${r.line}:${i}`}
-                  className={`tree-row grep-row${isSelected ? ' selected' : ''}`}
-                  style={{ paddingLeft: 12 }}
+                  className={`tree-row grep-row cut${isSelected ? ' selected' : ''}`}
                   onClick={(e) => handleRowClick(e, item)}
                   onContextMenu={(e) => handleRowContextMenu(e, item)}
                 >
@@ -714,7 +682,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
               )
             }) : (
               <div className="empty-daemon">
-                <div><span className="caret">&gt;</span> myai.files.grep("{filter}")</div>
+                <div><span className="caret">&gt;</span> myai.files.grep(« {filter} »)</div>
                 <div className="note">[note] aucun résultat.</div>
               </div>
             )
@@ -723,7 +691,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
           {!error && !isSearching && childrenByPath[''] && rows.length === 0 && (
             <div className="empty-daemon">
               <div><span className="caret">&gt;</span> myai.files.list()</div>
-              <div>éléments: 0</div>
+              <div>éléments : 0</div>
               <div className="note">[note] dossier vide.</div>
             </div>
           )}
@@ -731,14 +699,11 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
           {!isSearching && visibleRows.map((r) => {
             const isSelected = r.path === selectedPath || selectedPaths.has(r.path)
             const isExpanded = expandedPaths[r.path]
-            const chevron = r.type === 'folder' ? (isExpanded ? '▾' : '▸') : ''
-            const icon = r.type === 'folder' ? (isExpanded ? '📂' : '📁') : fileIcon(r.name)
-            const indent = r.depth * 18 + 12
             return (
               <div
                 key={r.path}
-                className={`tree-row${isSelected ? ' selected' : ''}`}
-                style={{ paddingLeft: indent }}
+                className={`tree-row cut${isSelected ? ' selected' : ''}`}
+                style={{ paddingLeft: `calc(${r.depth} * var(--s-4) + var(--s-3))` }}
                 draggable={r.type === 'file'}
                 onDragStart={(e) => {
                   e.dataTransfer.setData('text/plain', absolutePath(root, r.path))
@@ -747,17 +712,12 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
                 onClick={(e) => handleRowClick(e, r, { expandable: true })}
                 onContextMenu={(e) => handleRowContextMenu(e, r)}
               >
-                <span className="chevron">{chevron}</span>
-                <span className="file-icon">{icon}</span>
-                {(() => {
-                  const badge = gitBadge(r.gitStatus, r.gitSummary)
-                  return badge && (
-                    <span className="git-badge" style={{ color: badge.color }} title={badge.title}>{badge.label}</span>
-                  )
-                })()}
-                <span>{r.name}</span>
+                <span className="chevron">{r.type === 'folder' && <Icone nom={isExpanded ? 'deplier' : 'chevron'} />}</span>
+                <span className="file-icon">{r.type === 'folder' ? <Icone nom="dossier" /> : fileIcon(r.name)}</span>
+                {gitBadgeEl(r)}
+                <span className="tree-name">{r.name}</span>
                 {r.type === 'file' && isRecent(r.modified, now) && (
-                  <span className="recent-dot" title="modifié il y a moins de 5 min" />
+                  <span className="recent-dot cut" data-tip="Modifié il y a moins de 5 min" aria-label="Modifié il y a moins de 5 min" />
                 )}
               </div>
             )
@@ -768,68 +728,55 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
         {selectedItem?.type === 'file' && <FilePreview preview={preview} gitStatus={selectedItem.gitStatus} root={root} />}
 
         <div className="file-footer">
-          <span>{selectedPaths.size > 1 ? `${selectedPaths.size} éléments sélectionnés` : (selectedItem?.name ?? cwd ?? '—')}</span>
-          {(selectedItem || selectedPaths.size > 1)
+          <span className="file-footer-name">{selCount > 1 ? `${selCount} éléments sélectionnés` : (selectedItem?.name ?? cwd ?? '—')}</span>
+          {(selectedItem || selCount > 1)
             ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {selectedPaths.size <= 1 && `${formatSize(selectedItem?.size)} · modifié ${formatModified(selectedItem?.modified)}`}
-                <button
-                  className="btn"
-                  onClick={() => sendToChat(selectedPaths.size > 1 ? [...selectedPaths].map((p) => absolutePath(root, p)).join('\n') : absolutePath(root, selectedItem.path))}
-                  title="Insérer le(s) chemin(s) dans le composeur du chat — équivalent tactile du glisser-déposer desktop"
+              <span className="file-footer-actions">
+                {selCount <= 1 && `${formatSize(selectedItem?.size)} · modifié ${formatModified(selectedItem?.modified)}`}
+                <Btn
+                  kind="ghost"
+                  icon={<Icone nom="envoyer" />}
+                  onClick={() => sendToChat(selCount > 1 ? [...selectedPaths].map((p) => absolutePath(root, p)).join('\n') : absolutePath(root, selectedItem.path))}
+                  data-tip="Insérer le ou les chemins dans le composeur du chat (équivalent tactile du glisser-déposer)"
                 >
-                  ▸ Envoyer{selectedPaths.size > 1 ? ` ${selectedPaths.size} fichiers` : ''} au chat
-                </button>
+                  Envoyer{selCount > 1 ? ` ${selCount} fichiers` : ''} au chat
+                </Btn>
               </span>
             )
             : <span />}
         </div>
 
-        {contextMenu && (
-          <div
-            className="context-menu"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button onClick={() => { navigator.clipboard.writeText(absolutePath(root, contextMenu.item.path)); setContextMenu(null) }}>
-              📋 Copier le chemin
-            </button>
-            <button
-              onClick={() => {
-                const paths = selectedPaths.size > 1 ? [...selectedPaths] : [contextMenu.item.path]
-                sendToChat(paths.map((p) => absolutePath(root, p)).join('\n'))
-                setContextMenu(null)
-              }}
-            >
-              ▸ Envoyer au chat{selectedPaths.size > 1 ? ` (${selectedPaths.size})` : ''}
-            </button>
-            {contextMenu.item.type === 'folder' && (
-              <>
-                <button onClick={() => { const p = contextMenu.item.path; setContextMenu(null); handleCreate(p, 'file') }}>
-                  📄 Nouveau fichier ici
-                </button>
-                <button onClick={() => { const p = contextMenu.item.path; setContextMenu(null); handleCreate(p, 'folder') }}>
-                  📁 Nouveau dossier ici
-                </button>
-              </>
-            )}
-            <button onClick={() => { const item = contextMenu.item; setContextMenu(null); handleRename(item) }}>
-              ✏️ Renommer
-            </button>
-            <button
-              onClick={() => {
-                const targets = selectedPaths.size > 1
-                  ? [...selectedPaths].map(findItem).filter(Boolean)
-                  : [contextMenu.item]
-                setContextMenu(null)
-                handleDelete(targets)
-              }}
-              style={{ color: 'var(--hi)' }}
-            >
-              🗑️ Supprimer{selectedPaths.size > 1 ? ` (${selectedPaths.size})` : ''}
-            </button>
-          </div>
-        )}
+        <MenuPop point={contextMenu} open={Boolean(contextMenu)} onClose={() => setContextMenu(null)} width={240} label="Actions sur le fichier">
+          {contextMenu && (
+            <>
+              <MenuItem icon="copier" label="Copier le chemin"
+                onSelect={() => { navigator.clipboard.writeText(absolutePath(root, contextMenu.item.path)); setContextMenu(null) }} />
+              <MenuItem icon="envoyer" label={`Envoyer au chat${selCount > 1 ? ` (${selCount})` : ''}`}
+                onSelect={() => {
+                  const paths = selCount > 1 ? [...selectedPaths] : [contextMenu.item.path]
+                  sendToChat(paths.map((p) => absolutePath(root, p)).join('\n'))
+                  setContextMenu(null)
+                }} />
+              {contextMenu.item.type === 'folder' && (
+                <>
+                  <MenuItem icon="fichier" label="Nouveau fichier ici"
+                    onSelect={() => { const p = contextMenu.item.path; setContextMenu(null); handleCreate(p, 'file') }} />
+                  <MenuItem icon="dossier" label="Nouveau dossier ici"
+                    onSelect={() => { const p = contextMenu.item.path; setContextMenu(null); handleCreate(p, 'folder') }} />
+                </>
+              )}
+              <MenuItem icon="modifier" label="Renommer"
+                onSelect={() => { const item = contextMenu.item; setContextMenu(null); handleRename(item) }} />
+              <MenuSep />
+              <MenuItem icon="supprimer" dan label={`Supprimer${selCount > 1 ? ` (${selCount})` : ''}`}
+                onSelect={() => {
+                  const targets = selCount > 1 ? [...selectedPaths].map(findItem).filter(Boolean) : [contextMenu.item]
+                  setContextMenu(null)
+                  handleDelete(targets)
+                }} />
+            </>
+          )}
+        </MenuPop>
       </div>
     </div>
   )

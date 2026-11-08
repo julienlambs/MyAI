@@ -7,6 +7,8 @@ import { usePanelBridge } from '../lib/usePanelBridge'
 import { useDialogs } from '../lib/useDialogs'
 import { randomPhrase } from '../lib/loadingPhrases'
 import DiffView from './DiffView'
+import { Btn, Field, IconBtn, Icone, Touche } from '@declic/ui'
+import { MenuPop, MenuItem, MenuGroupe, MenuSep } from './MenuPop'
 
 // Au-delà, le composeur scrolle en interne plutôt que de continuer à grandir —
 // sinon un très gros pavé de texte collé pousserait toute la conversation hors
@@ -44,7 +46,8 @@ function LoadingIndicator() {
     <div className="loading-indicator">
       <span className="loading-phrase">{phrase}</span>
       <span className="loading-meta">
-        {elapsedSeconds.toFixed(1)}s{tokenEstimate > 0 ? ` · ↓ ${tokenEstimate} tokens` : ''}
+        {elapsedSeconds.toFixed(1).replace('.', ',')} s
+        {tokenEstimate > 0 && <> · <Icone nom="descendre" /> {tokenEstimate} tokens</>}
       </span>
     </div>
   )
@@ -60,7 +63,13 @@ function extractCodeBlock(text) {
   return match ? match[1].trim() : null
 }
 
-const MODE_ICONS = { plan: '📋', default: '🔒', 'auto-edit': '✏️', auto: '🤖', yolo: '🔓' }
+// Coupe de la charte sur le code en ligne et les blocs de code rendus par le Markdown (pas de classe possible autrement).
+const MD_COMPONENTS = {
+  code: ({ node, className, ...props }) => <code className={`cut${className ? ` ${className}` : ''}`} {...props} />,
+  pre: ({ node, ...props }) => <pre className="cut" {...props} />,
+}
+
+const MODE_ICONS = { plan: 'liste', default: 'verrou', 'auto-edit': 'modifier', auto: 'eclair', yolo: 'cadenas-ouvert' }
 
 // Modes d'approbation qwen-code (plan/default/auto-edit/auto/yolo), vérifiés
 // empiriquement via session/set_mode — équivalent des modes de Claude Code
@@ -68,46 +77,25 @@ const MODE_ICONS = { plan: '📋', default: '🔒', 'auto-edit': '✏️', auto:
 function ModeSwitcher() {
   const { modeId, availableModes, setMode } = useAgentSocket()
   const [open, setOpen] = useState(false)
-  const [dropdownStyle, setDropdownStyle] = useState({})
-  const wrapRef = useRef(null)
-
-  useEffect(() => {
-    if (!open || !wrapRef.current) return
-    const rect = wrapRef.current.getBoundingClientRect()
-    const width = Math.min(300, window.innerWidth - 24)
-    let left = rect.left
-    if (left + width > window.innerWidth - 12) left = window.innerWidth - width - 12
-    if (left < 12) left = 12
-    // Ouvre vers le haut : ce bouton vit en bas de l'écran (zone du composeur),
-    // un dropdown classique vers le bas sortirait de l'écran.
-    setDropdownStyle({ left: left - rect.left, right: 'auto', width, top: 'auto', bottom: 'calc(100% + 6px)' })
-  }, [open])
+  const btnRef = useRef(null)
 
   if (availableModes.length === 0) return null
   const current = availableModes.find((m) => m.id === modeId)
 
   return (
-    <div style={{ position: 'relative' }} ref={wrapRef}>
-      <button
-        className="btn mode-switch-btn"
-        onClick={() => setOpen((v) => !v)}
-        title="Changer le mode d'approbation"
-      >
-        {MODE_ICONS[modeId] || '⚙'} {current?.name || 'Mode'}
-      </button>
-      {open && (
-        <div className="mobile-menu-dropdown" style={dropdownStyle}>
-          {availableModes.map((m) => (
-            <button key={m.id} onClick={() => { setOpen(false); setMode(m.id) }} style={{ height: 'auto', display: 'block' }}>
-              <div style={{ color: m.id === modeId ? 'var(--accent)' : 'var(--text)', fontWeight: m.id === modeId ? 600 : 400, fontSize: 12.5 }}>
-                {MODE_ICONS[m.id] || '⚙'} {m.name}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{m.description}</div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <>
+      <Btn kind="sec" ref={btnRef} icon={<Icone nom={MODE_ICONS[modeId] || 'reglages'} />}
+        onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open}
+        data-tip="Changer le mode d’approbation">
+        {current?.name || 'Mode'}
+      </Btn>
+      <MenuPop anchorRef={btnRef} open={open} onClose={() => setOpen(false)} width={300} label="Mode d’approbation">
+        {availableModes.map((m) => (
+          <MenuItem key={m.id} icon={MODE_ICONS[m.id] || 'reglages'} label={m.name} desc={m.description}
+            checked={m.id === modeId} onSelect={() => { setOpen(false); setMode(m.id) }} />
+        ))}
+      </MenuPop>
+    </>
   )
 }
 
@@ -119,57 +107,36 @@ function ModelSwitcher() {
   const { model, switchModel } = useAgentSocket()
   const [available, setAvailable] = useState([])
   const [open, setOpen] = useState(false)
-  const [dropdownStyle, setDropdownStyle] = useState({})
-  const wrapRef = useRef(null)
+  const btnRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
     fetch('/api/models').then((r) => r.json()).then((data) => setAvailable(data.available || [])).catch(() => setAvailable([]))
   }, [open])
 
-  useEffect(() => {
-    if (!open || !wrapRef.current) return
-    const rect = wrapRef.current.getBoundingClientRect()
-    const width = Math.min(220, window.innerWidth - 24)
-    let left = rect.left
-    if (left + width > window.innerWidth - 12) left = window.innerWidth - width - 12
-    if (left < 12) left = 12
-    setDropdownStyle({ left: left - rect.left, right: 'auto', width, top: 'auto', bottom: 'calc(100% + 6px)' })
-  }, [open])
-
   if (!model) return null
 
   return (
-    <div style={{ position: 'relative' }} ref={wrapRef}>
-      <button
-        className="btn mode-switch-btn"
-        onClick={() => setOpen((v) => !v)}
-        title="Changer de modèle (llama-swap)"
-      >
-        🧠 {model}
-      </button>
-      {open && (
-        <div className="mobile-menu-dropdown" style={dropdownStyle}>
-          {available.length === 0 && (
-            <div style={{ padding: '8px 10px', fontSize: 11.5, color: 'var(--muted)' }}>chargement…</div>
-          )}
-          {available.map((m) => (
-            <button key={m} onClick={() => { setOpen(false); if (m !== model) switchModel(m) }} style={{ height: 'auto', display: 'block' }}>
-              <div style={{ color: m === model ? 'var(--accent)' : 'var(--text)', fontWeight: m === model ? 600 : 400, fontSize: 12.5 }}>
-                {m === model ? '● ' : ''}{m}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <>
+      <Btn kind="sec" ref={btnRef} icon={<Icone nom="ia" />} onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu" aria-expanded={open} data-tip="Changer de modèle (llama-swap)">
+        {model}
+      </Btn>
+      <MenuPop anchorRef={btnRef} open={open} onClose={() => setOpen(false)} width={240} label="Modèle">
+        {available.length === 0 && <MenuItem label="Chargement…" disabled />}
+        {available.map((m) => (
+          <MenuItem key={m} label={m} checked={m === model}
+            onSelect={() => { setOpen(false); if (m !== model) switchModel(m) }} />
+        ))}
+      </MenuPop>
+    </>
   )
 }
 
 function SessionList({ cwd, onClose }) {
   const { resumeProject, messages } = useAgentSocket()
   const { confirm } = useDialogs()
-  const [sessions, setSessions] = useState([])
+  const [sessions, setSessions] = useState(null)
 
   useEffect(() => {
     fetch('/api/sessions').then((r) => r.json()).then(setSessions).catch(() => setSessions([]))
@@ -181,55 +148,32 @@ function SessionList({ cwd, onClose }) {
     resumeProject(cwd, sessionId)
   }
 
-  if (sessions.length === 0) {
-    return <div style={{ padding: '8px 10px', fontSize: 11.5, color: 'var(--muted)' }}>Aucune session enregistrée pour ce dossier.</div>
-  }
+  if (sessions === null) return <MenuItem label="Chargement…" disabled />
+  if (sessions.length === 0) return <MenuItem label="Aucune session enregistrée pour ce dossier." disabled />
   return sessions.map((s) => (
-    <button key={s.id} onClick={() => handleSelect(s.id)} style={{ height: 'auto', display: 'block' }}>
-      <div style={{ fontSize: 11.5, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.summary}</div>
-      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{formatSessionDate(s.modified)} · {s.messageCount} messages</div>
-    </button>
+    <MenuItem key={s.id} icon="historique" label={s.summary}
+      desc={`${formatSessionDate(s.modified)} · ${s.messageCount} messages`} onSelect={() => handleSelect(s.id)} />
   ))
 }
 
-// Bouton propre (desktop, popover positionné dynamiquement) — masqué sur
-// mobile, où la même liste (SessionList) est intégrée au menu "⋯" du panneau.
+// Bouton propre (desktop) — masqué sur mobile, où la même liste (SessionList)
+// est intégrée au menu « Plus d'options » du panneau. Le menu reprend la largeur
+// du panneau Chat (redimensionnable), pas une largeur fixe toujours trop étroite.
 function SessionHistory({ cwd }) {
   const [open, setOpen] = useState(false)
-  const [dropdownStyle, setDropdownStyle] = useState({})
-  const wrapRef = useRef(null)
-
-  // Calé sur la largeur réelle du panneau Chat (pas une largeur fixe) — le
-  // panneau peut être redimensionné (ResizeHandle) ou tout simplement occuper
-  // des largeurs différentes desktop/mobile, autant exploiter tout l'espace
-  // dispo à chaque fois plutôt qu'une valeur en dur toujours trop étroite.
-  // position: fixed (pas absolute) — le panneau a overflow:hidden, un ancrage
-  // absolute se faisait couper net à son bord plutôt qu'à celui de la fenêtre
-  // (bug remonté par Julien), même piège déjà résolu ailleurs pour le menu ☰.
-  useEffect(() => {
-    if (!open || !wrapRef.current) return
-    const buttonRect = wrapRef.current.getBoundingClientRect()
-    const panelEl = wrapRef.current.closest('.panel')
-    const panelRect = panelEl ? panelEl.getBoundingClientRect() : buttonRect
-    setDropdownStyle({ position: 'fixed', top: buttonRect.bottom + 6, left: panelRect.left, right: 'auto', width: panelRect.width })
-  }, [open])
+  const btnRef = useRef(null)
 
   return (
-    <div style={{ position: 'relative' }} ref={wrapRef}>
-      <button
-        className="btn desktop-only-btn"
-        style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 8px', fontSize: 11 }}
-        onClick={() => setOpen((v) => !v)}
-        title="Sessions qwen-code passées dans ce dossier — cliquer pour reprendre"
-      >
-        📜 Sessions
-      </button>
-      {open && (
-        <div className="mobile-menu-dropdown" style={dropdownStyle}>
-          <SessionList cwd={cwd} onClose={() => setOpen(false)} />
-        </div>
-      )}
-    </div>
+    <>
+      <Btn kind="ghost" className="desktop-only-btn" ref={btnRef} icon={<Icone nom="historique" />}
+        onClick={() => setOpen((v) => !v)} aria-haspopup="menu" aria-expanded={open}
+        data-tip="Sessions qwen-code passées dans ce dossier">
+        Sessions
+      </Btn>
+      <MenuPop anchorRef={btnRef} open={open} onClose={() => setOpen(false)} width="panel" label="Sessions">
+        <SessionList cwd={cwd} onClose={() => setOpen(false)} />
+      </MenuPop>
+    </>
   )
 }
 
@@ -299,52 +243,48 @@ function AskUserQuestionForm({ questions, onSubmit }) {
       {questions.map((q, idx) => {
         const a = answers[idx] || {}
         return (
-          <div className="question-card" key={idx}>
+          <div className="cs cut question-card" key={idx}><div className="in cut2">
             <div className="question-card-header">
-              {q.header && <span className="question-chip">{q.header}</span>}
+              {q.header && <span className="badge cut bg-acc">{q.header}</span>}
               <span className="question-text">{q.question}</span>
             </div>
             <div className="question-options">
               {q.options.map((opt) => {
                 const selected = q.multiSelect ? (a.values || []).includes(opt.label) : a.value === opt.label
                 return (
-                  <button
+                  <Btn
                     key={opt.label}
                     type="button"
-                    className={`option-btn${selected ? ' selected' : ''}`}
-                    title={opt.description}
+                    kind={selected ? 'pri' : 'sec'}
+                    aria-pressed={selected}
+                    icon={selected ? <Icone nom="valider" /> : null}
+                    data-tip={opt.description}
                     onClick={() => (q.multiSelect ? toggleMulti(idx, opt.label) : selectSingle(idx, opt.label))}
                   >
                     {opt.label}
-                  </button>
+                  </Btn>
                 )
               })}
             </div>
-            <input
-              type="text"
-              className="dialog-input custom-answer-input"
-              placeholder="Autre…"
+            <Field
+              label="Autre réponse"
               value={a.custom || ''}
               onChange={(e) => setCustom(idx, e.target.value, q.multiSelect)}
             />
-          </div>
+          </div></div>
         )
       })}
-      <button
-        type="button"
-        className="btn btn-approve"
-        style={{ alignSelf: 'flex-start' }}
-        disabled={!questions.some((_, idx) => hasAnswer(idx))}
-        onClick={handleSubmit}
-      >
-        Valider les réponses
-      </button>
+      <div>
+        <Btn type="button" disabled={!questions.some((_, idx) => hasAnswer(idx))} onClick={handleSubmit}>
+          Valider les réponses
+        </Btn>
+      </div>
     </div>
   )
 }
 
 // Fusionne les tool calls (role 'system' avec toolCallId) consécutifs en un seul
-// groupe pliable — évite un mur de lignes "⚙ ... — completed" sur une tâche longue.
+// groupe pliable — évite un mur de lignes « … — completed » sur une tâche longue.
 function groupMessages(messages) {
   const out = []
   for (const m of messages) {
@@ -375,7 +315,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
   const [newSessionPath, setNewSessionPath] = useState('')
   const [cwdExpanded, setCwdExpanded] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mobileSessionsOpen, setMobileSessionsOpen] = useState(false)
+  const mobileMenuRef = useRef(null)
   const [hideThoughts, setHideThoughts] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState({})
   const messagesRef = useRef(null)
@@ -496,113 +436,80 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
   )
 
   return (
-    <div className="panel is-main" style={{ gridArea }} data-slot={gridArea}>
+    <div className="panel is-main coupe" style={{ gridArea }} data-slot={gridArea}>
       <div className="panel-full">
         <div className="section-header">
           <div className="section-title-row">
             <div className="section-title">
-              <span className="sym">◈</span>
-              <span className="name">Chat</span>
-              <span className="pill model-pill">qwen-code</span>
+              <Icone nom="bulle" className="sym" />
+              <h2 className="name">Chat</h2>
+              <span className="badge cut bg-neu model-pill">qwen-code</span>
               {cwd && (
-                <span
-                  className={`pill cwd-pill${cwdExpanded ? ' expanded' : ''}`}
-                  title={cwd}
+                <button
+                  type="button"
+                  className={`badge cut bg-neu cwd-pill${cwdExpanded ? ' expanded' : ''}`}
+                  data-tip={cwdExpanded ? undefined : cwd}
+                  aria-expanded={cwdExpanded}
                   onClick={() => setCwdExpanded((v) => !v)}
-                  style={cwdExpanded
-                    ? { whiteSpace: 'normal', wordBreak: 'break-all', cursor: 'pointer' }
-                    : { maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }}
                 >
                   {cwd}
-                </span>
+                </button>
               )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="section-actions">
               {variant !== 'full' && (
-                <button
-                  className="btn"
-                  style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, width: 24, height: 24, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  onClick={onActivate}
-                  title="Agrandir ce panneau"
-                >
-                  ⤢
-                </button>
+                <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
               )}
-              <button
-                className="btn desktop-only-btn"
-                style={{
-                  background: hideThoughts ? 'var(--card-2)' : 'var(--accent-soft)',
-                  color: hideThoughts ? 'var(--muted)' : 'var(--accent)',
-                  borderRadius: 6, padding: '3px 8px', fontSize: 11,
-                }}
+              <Btn
+                kind="ghost"
+                className="desktop-only-btn"
+                aria-pressed={!hideThoughts}
+                icon={<Icone nom={hideThoughts ? 'oeil-barre' : 'oeil'} />}
                 onClick={() => setHideThoughts((v) => !v)}
-                title="Masquer/afficher le raisonnement de l'agent"
+                data-tip="Masquer ou afficher le raisonnement de l’agent"
               >
-                {hideThoughts ? '💭 Raisonnement masqué' : '💭 Raisonnement visible'}
-              </button>
-              <button
-                className="btn desktop-only-btn"
-                style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 6, padding: '3px 8px', fontSize: 11 }}
-                onClick={compact}
-                title="Compacter le contexte (/compress)"
-              >
-                🗜 Compacter
-              </button>
-              <button
-                className="btn desktop-only-btn"
-                style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 6, padding: '3px 8px', fontSize: 11 }}
-                onClick={handleOpenNewSessionForm}
-                title="Démarrer une nouvelle session dans un autre dossier"
-              >
-                ↻ Nouvelle session
-              </button>
+                Raisonnement
+              </Btn>
+              <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="reduire" />} onClick={compact}
+                data-tip="Compacter le contexte (/compress)">
+                Compacter
+              </Btn>
+              <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="ajouter" />} onClick={handleOpenNewSessionForm}
+                data-tip="Démarrer une nouvelle session dans un autre dossier">
+                Nouvelle session
+              </Btn>
               <SessionHistory cwd={cwd} />
               <div className="mobile-menu-wrap">
-                <button
-                  className="btn"
-                  style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 10px', fontSize: 13 }}
-                  onClick={() => setMobileMenuOpen((v) => !v)}
-                >
-                  ⋯
-                </button>
-                {mobileMenuOpen && (
-                  <div className="mobile-menu-dropdown mobile-menu-dropdown--full">
-                    <div className="mobile-menu-info">
-                      qwen-code{cwd ? ` · ${cwd}` : ''}
-                    </div>
-                    <button onClick={() => { setMobileMenuOpen(false); setHideThoughts((v) => !v) }}>
-                      {hideThoughts ? '💭 Afficher le raisonnement' : '💭 Masquer le raisonnement'}
-                    </button>
-                    <button onClick={() => { setMobileMenuOpen(false); compact() }}>🗜 Compacter</button>
-                    <button onClick={() => { setMobileMenuOpen(false); handleOpenNewSessionForm() }}>↻ Nouvelle session</button>
-                    <button onClick={() => setMobileSessionsOpen((v) => !v)}>
-                      {mobileSessionsOpen ? '📜 Sessions ▾' : '📜 Sessions ▸'}
-                    </button>
-                    {mobileSessionsOpen && (
-                      <div className="mobile-menu-sublist">
-                        <SessionList cwd={cwd} onClose={() => { setMobileMenuOpen(false); setMobileSessionsOpen(false) }} />
-                      </div>
-                    )}
-                  </div>
-                )}
+                <IconBtn kind="ghost" ref={mobileMenuRef} label="Plus d’options" icon={<Icone nom="plus-options" />}
+                  aria-haspopup="menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
+                <MenuPop anchorRef={mobileMenuRef} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}
+                  width="panel" label="Options du chat">
+                  <MenuGroupe>qwen-code{cwd ? ` · ${cwd}` : ''}</MenuGroupe>
+                  <MenuItem icon={hideThoughts ? 'oeil' : 'oeil-barre'}
+                    label={hideThoughts ? 'Afficher le raisonnement' : 'Masquer le raisonnement'}
+                    onSelect={() => { setMobileMenuOpen(false); setHideThoughts((v) => !v) }} />
+                  <MenuItem icon="reduire" label="Compacter le contexte" onSelect={() => { setMobileMenuOpen(false); compact() }} />
+                  <MenuItem icon="ajouter" label="Nouvelle session" onSelect={() => { setMobileMenuOpen(false); handleOpenNewSessionForm() }} />
+                  <MenuSep />
+                  <MenuGroupe>Sessions</MenuGroupe>
+                  <SessionList cwd={cwd} onClose={() => setMobileMenuOpen(false)} />
+                </MenuPop>
               </div>
-              <span className="kbd">⌘1</span>
+              <span className="kbd"><Touche>Ctrl 1</Touche></span>
             </div>
           </div>
 
           {showNewSessionForm && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <input
-                className="files-search"
-                style={{ flex: 1 }}
-                placeholder="Chemin du dossier de la nouvelle session…"
+            <div className="new-session-form">
+              <Field
+                label="Dossier de la nouvelle session"
                 value={newSessionPath}
                 onChange={(e) => setNewSessionPath(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmNewSession(); if (e.key === 'Escape') setShowNewSessionForm(false) }}
                 autoFocus
               />
-              <button className="btn btn-approve" onClick={handleConfirmNewSession}>Démarrer</button>
-              <button className="btn btn-reject" onClick={() => setShowNewSessionForm(false)}>Annuler</button>
+              <Btn onClick={handleConfirmNewSession}>Démarrer</Btn>
+              <Btn kind="sec" onClick={() => setShowNewSessionForm(false)}>Annuler</Btn>
             </div>
           )}
 
@@ -610,11 +517,11 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
             <span className="context-label">Contexte</span>
             <span className="context-value" style={{ color: contextColor(contextUsage?.percent) }}>
               {contextUsage?.percent != null
-                ? `${contextUsage.percent}% · ${formatTokens(contextUsage.used)} / ${formatTokens(contextUsage.total)} tokens`
+                ? `${contextUsage.percent} % · ${formatTokens(contextUsage.used)} / ${formatTokens(contextUsage.total)} tokens`
                 : '—'}
             </span>
           </div>
-          <div className={`context-track${(contextUsage?.percent ?? 0) >= 90 ? ' context-warning' : ''}`}>
+          <div className={`context-track cut${(contextUsage?.percent ?? 0) >= 90 ? ' context-warning' : ''}`}>
             <div className="context-overlay" style={{ width: `${100 - (contextUsage?.percent ?? 0)}%` }} />
           </div>
         </div>
@@ -622,14 +529,14 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
         <div className="messages" ref={messagesRef} onScroll={handleMessagesScroll}>
           {!connected && (
             <div className="msg-system-wrap">
-              <span className="msg-system">⚠ connexion à l'agent perdue — reconnexion en cours…</span>
+              <span className="badge cut bg-md"><Icone nom="attention" /> Connexion à l’agent perdue, reconnexion en cours…</span>
             </div>
           )}
           {connected && messages.length === 0 && (
             <div className="empty-daemon">
               <div><span className="caret">&gt;</span> myai.chat()</div>
-              <div>statut: en ligne&nbsp;&nbsp;/&nbsp;&nbsp;historique: vide</div>
-              <div className="note">[note] aucune tâche en cours. en attente.</div>
+              <div>statut : en ligne&nbsp;&nbsp;/&nbsp;&nbsp;historique : vide</div>
+              <div className="note">[note] aucune tâche en cours. En attente.</div>
             </div>
           )}
           {groupedMessages.map((m) => {
@@ -637,7 +544,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
               if (m.items.length === 1) {
                 return (
                   <div className="msg-system-wrap" key={m.id}>
-                    <span className="msg-system">{m.items[0].text}</span>
+                    <span className="msg-system cut">{m.items[0].text}</span>
                   </div>
                 )
               }
@@ -645,14 +552,17 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
               return (
                 <div className="msg-system-wrap" key={m.id}>
                   <div className="tool-group">
-                    <button
+                    <Btn
+                      kind="ghost"
                       className="tool-group-toggle"
+                      aria-expanded={isOpen}
+                      icon={<Icone nom={isOpen ? 'replier' : 'deplier'} />}
                       onClick={() => setExpandedGroups((p) => ({ ...p, [m.id]: !p[m.id] }))}
                     >
-                      {isOpen ? '▾' : '▸'} {m.items.length} actions{isOpen ? '' : ' — cliquer pour détailler'}
-                    </button>
+                      {m.items.length} actions{isOpen ? '' : ', cliquer pour détailler'}
+                    </Btn>
                     {isOpen && m.items.map((item) => (
-                      <div className="msg-system tool-group-item" key={item.id}>{item.text}</div>
+                      <div className="msg-system cut tool-group-item" key={item.id}>{item.text}</div>
                     ))}
                   </div>
                 </div>
@@ -661,40 +571,35 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
             if (m.role === 'system') {
               return (
                 <div className="msg-system-wrap" key={m.id}>
-                  <span className="msg-system">{m.text}</span>
+                  <span className="msg-system cut">{m.text}</span>
                 </div>
               )
             }
             if (m.role === 'thought') {
               return (
                 <div className="msg-col agent" key={m.id}>
-                  <div
-                    className="bubble agent"
-                    style={{ background: 'transparent', border: '1px dashed var(--border-hi)', color: 'var(--muted)', fontStyle: 'italic' }}
-                  >
-                    💭 {m.text}
+                  <div className="bubble thought coupe tir">
+                    <Icone nom="ia" /> {m.text}
                     {m.streaming && <span className="cursor" />}
                   </div>
                 </div>
               )
             }
             const isUser = m.role === 'user'
+            // Tour d'agent qui n'a produit qu'un appel d'outil : pas de bulle vide à l'écran.
+            if (!isUser && !m.streaming && !m.text?.trim()) return null
             const code = !isUser && !m.streaming ? extractCodeBlock(m.text) : null
             return (
               <div className={`msg-col ${isUser ? 'user' : 'agent'}`} key={m.id}>
-                <div className={`bubble ${isUser ? 'user' : 'agent'} markdown-body`}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                <div className={`bubble ${isUser ? 'user' : 'agent'} coupe markdown-body`}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{m.text}</ReactMarkdown>
                   {m.streaming && <span className="cursor" />}
                 </div>
                 {code && (
-                  <button
-                    className="btn"
-                    style={{ alignSelf: 'flex-start', background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 8px', fontSize: 10.5 }}
-                    onClick={() => sendToTerminal(code)}
-                    title="Envoyer cette commande au terminal"
-                  >
-                    ▸ Exécuter dans le terminal
-                  </button>
+                  <Btn kind="ghost" className="run-in-terminal" icon={<Icone nom="terminal" />}
+                    onClick={() => sendToTerminal(code)} data-tip="Envoyer cette commande au terminal">
+                    Exécuter dans le terminal
+                  </Btn>
                 )}
               </div>
             )
@@ -706,49 +611,48 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
           {pendingPermission && (() => {
             const questions = pendingPermission.rawInput?.questions
             const isQuestionForm = !pendingPermission.diff && Array.isArray(questions)
+            const danger = Boolean(pendingPermission.dangerousCommand)
             return (
-              <div className={`approval-banner${pendingPermission.dangerousCommand ? ' approval-banner-danger' : ''}`}>
-                <span className="icon">{pendingPermission.dangerousCommand ? '⚠' : '⚙'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12 }}>
-                    {isQuestionForm ? "L'agent a besoin de précisions" : "L'agent souhaite exécuter une action"}
+              <div className={`approval-banner coupe${danger ? ' approval-banner-danger' : ''}`} role="alert">
+                <Icone nom={danger ? 'attention' : 'reglages'} className="icon" />
+                <div className="approval-body">
+                  <div className="approval-title">
+                    {isQuestionForm ? 'L’agent a besoin de précisions' : 'L’agent souhaite exécuter une action'}
                   </div>
-                  {pendingPermission.dangerousCommand && (
+                  {danger && (
                     <div className="danger-warning">
-                      Commande potentiellement destructrice détectée ({pendingPermission.dangerousCommand}) — vérifie avant d'approuver
+                      Commande potentiellement destructrice détectée ({pendingPermission.dangerousCommand}) : vérifie avant d’approuver.
                     </div>
                   )}
-                  <code className="cmd">{pendingPermission.toolTitle}</code>
+                  <code className="cmd cut">{pendingPermission.toolTitle}</code>
                   {pendingPermission.diff && <DiffView diff={pendingPermission.diff} />}
                   {isQuestionForm && (
                     <AskUserQuestionForm questions={questions} onSubmit={handleSubmitAnswers} />
                   )}
                   {!pendingPermission.diff && !isQuestionForm && pendingPermission.rawInput && (
-                    <pre className="raw-input-view">{JSON.stringify(pendingPermission.rawInput, null, 2)}</pre>
+                    <pre className="raw-input-view coupe">{JSON.stringify(pendingPermission.rawInput, null, 2)}</pre>
                   )}
                 </div>
                 <div className="approval-banner-actions">
-                  <button className="btn btn-reject" onClick={handleReject}>Rejeter</button>
+                  <Btn kind="sec" onClick={handleReject}>Rejeter</Btn>
                   {!isQuestionForm && pendingPermission.options?.some((o) => o.kind === 'allow_always') && (
-                    <button
-                      className="btn btn-approve-always"
-                      onClick={handleApproveAlways}
-                      title="Toujours autoriser ce type d'action dans ce dossier, pour la durée de vie du backend"
-                    >
+                    <Btn kind="sec" onClick={handleApproveAlways}
+                      data-tip="Toujours autoriser ce type d’action dans ce dossier, pour la durée de vie du backend">
                       Toujours
-                    </button>
+                    </Btn>
                   )}
-                  {!isQuestionForm && <button className="btn btn-approve" onClick={handleApprove}>Approuver</button>}
+                  {!isQuestionForm && <Btn onClick={handleApprove}>Approuver</Btn>}
                 </div>
               </div>
             )
           })()}
 
-          <div className={`composer${dragOver ? ' drag-over' : ''}`} {...dragHandlers}>
+          <div className={`composer coupe${dragOver ? ' drag-over' : ''}`} {...dragHandlers}>
             <textarea
               ref={textareaRef}
               rows={1}
-              placeholder="Écrire à l'agent…"
+              aria-label="Message à l’agent"
+              placeholder="Écrire à l’agent…"
               value={composerValue}
               onChange={(e) => setComposerValue(e.target.value)}
               onKeyDown={(e) => {
@@ -759,28 +663,19 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
               }}
             />
             <div className="composer-toolbar">
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div className="composer-switches">
                 <ModeSwitcher />
                 <ModelSwitcher />
               </div>
               {isGenerating ? (
-                <button
-                  className="btn btn-send enabled btn-stop"
-                  onClick={cancelTurn}
-                  title="Interrompre la génération en cours"
-                >
-                  <span className="btn-send-text">Stop</span>
-                  <span className="btn-send-icon">⏹</span>
-                </button>
+                <Btn kind="dan" className="btn-send" icon={<Icone nom="stop" />} onClick={cancelTurn}
+                  aria-label="Interrompre la génération" data-tip="Interrompre la génération en cours">
+                  <span className="btn-send-text">Arrêter</span>
+                </Btn>
               ) : (
-                <button
-                  className={`btn btn-send ${canSend ? 'enabled' : 'disabled'}`}
-                  disabled={!canSend}
-                  onClick={handleSend}
-                >
+                <Btn className="btn-send" icon={<Icone nom="envoyer" />} disabled={!canSend} onClick={handleSend} aria-label="Envoyer">
                   <span className="btn-send-text">Envoyer</span>
-                  <span className="btn-send-icon">➤</span>
-                </button>
+                </Btn>
               )}
             </div>
           </div>

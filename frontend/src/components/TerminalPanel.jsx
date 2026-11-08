@@ -4,28 +4,30 @@ import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
 import { useTheme } from '../lib/useTheme'
 import { usePanelBridge } from '../lib/usePanelBridge'
+import { Btn, IconBtn, Icone, Touche } from '@declic/ui'
 
-// xterm.js a son propre système de couleurs, indépendant du CSS — pas de var(--bg)
-// possible ici, donc on le resynchronise manuellement sur le thème courant. La
-// palette ANSI (pas juste fond/texte/curseur) doit être définie explicitement :
-// sans ça, PSReadLine (jaune/rouge pour la coloration syntaxique) retombe sur
-// les couleurs par défaut de xterm.js, illisibles sur le thème clair.
-const XTERM_THEMES = {
-  dark: {
-    background: '#13131f', foreground: '#FFFFFF', cursor: '#6050DC',
-    black: '#1E1E30', red: '#FF7A6B', green: '#6BCB9C', yellow: '#E0B96B',
-    blue: '#6050DC', magenta: '#B06BCB', cyan: '#6BC5CB', white: '#FFFFFF',
-    brightBlack: '#8888AA', brightRed: '#FF9A8E', brightGreen: '#8EDBB4', brightYellow: '#EACB8E',
-    brightBlue: '#8579E8', brightMagenta: '#C98EDB', brightCyan: '#8EDBE0', brightWhite: '#FFFFFF',
-  },
-  light: {
-    background: '#EEEEE8', foreground: '#1A1A18', cursor: '#4A3CC8',
-    black: '#1A1A18', red: '#C0392B', green: '#2D8A5A', yellow: '#8A6208',
-    blue: '#4A3CC8', magenta: '#8E3BA0', cyan: '#1B7A82', white: '#70708A',
-    brightBlack: '#70708A', brightRed: '#D8493A', brightGreen: '#3AA06D', brightYellow: '#A97A0A',
-    brightBlue: '#5C4CDA', brightMagenta: '#A34CB8', brightCyan: '#2494A0', brightWhite: '#1A1A18',
-  },
+// xterm.js a son propre système de couleurs, indépendant du CSS (pas de var() possible) : on lit les jetons de
+// la charte sur <html> au moment d'appliquer le thème. La palette ANSI doit être complète, sinon PSReadLine
+// (coloration syntaxique) retombe sur les couleurs par défaut de xterm, illisibles en thème clair.
+// Correspondances : rouge/vert/jaune = sémantiques hi/lo/md ; bleu, magenta, cyan = couleurs de graphique g1, g7, g5.
+function xtermTheme() {
+  const css = getComputedStyle(document.documentElement)
+  const v = (name) => css.getPropertyValue(name).trim()
+  const light = document.documentElement.dataset.theme === 'light'
+  const ansi = {
+    black: light ? v('--text') : v('--borderHi'), red: v('--hi'), green: v('--lo'), yellow: v('--md'),
+    blue: v('--g1'), magenta: v('--g7'), cyan: v('--g5'), white: light ? v('--muted') : v('--text'),
+  }
+  return {
+    background: v('--card'), foreground: v('--text'), cursor: v('--acc'), cursorAccent: v('--card'),
+    selectionBackground: v('--selBg'), selectionForeground: v('--text'),
+    ...ansi,
+    brightBlack: v('--muted'), brightRed: ansi.red, brightGreen: ansi.green, brightYellow: ansi.yellow,
+    brightBlue: v('--acc'), brightMagenta: v('--g3'), brightCyan: ansi.cyan, brightWhite: v('--text'),
+  }
 }
+
+const TERM_FONT = "'Declic Mono', ui-monospace, Consolas, monospace"
 
 // Une instance = un pty backend + son propre xterm + sa propre connexion
 // WebSocket. Toujours montée tant que son onglet existe (même si un autre
@@ -47,9 +49,9 @@ function TerminalInstance({ id, isActive, mode, toTerminal, instancesRef }) {
     if (!containerRef.current) return
 
     const term = new Terminal({
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 12.5,
-      theme: XTERM_THEMES[mode],
+      fontFamily: TERM_FONT,
+      fontSize: 13,
+      theme: xtermTheme(),
       cursorBlink: true,
     })
     termRef.current = term
@@ -59,6 +61,16 @@ function TerminalInstance({ id, isActive, mode, toTerminal, instancesRef }) {
     term.open(containerRef.current)
     fitAddon.fit()
     instancesRef.current[id] = { getSelection: () => termRef.current?.getSelection() }
+    // Déclic Mono n'est téléchargée qu'au premier usage : xterm mesurerait la largeur des caractères sur la police
+    // de repli. Une fois chargée, changer fontFamily (aller-retour) l'oblige à remesurer, puis on recale la grille.
+    if (!document.fonts.check("13px 'Declic Mono'")) {
+      document.fonts.load("13px 'Declic Mono'").then(() => {
+        if (termRef.current !== term) return
+        term.options.fontFamily = 'monospace'
+        term.options.fontFamily = TERM_FONT
+        fitAddon.fit()
+      }).catch(() => {})
+    }
 
     let cancelled = false
     let retryTimer = null
@@ -160,7 +172,7 @@ function TerminalInstance({ id, isActive, mode, toTerminal, instancesRef }) {
 
   // Terminal déjà monté et thème changé en cours de route : on met à jour sans le recréer.
   useEffect(() => {
-    if (termRef.current) termRef.current.options.theme = XTERM_THEMES[mode]
+    if (termRef.current) termRef.current.options.theme = xtermTheme()
   }, [mode])
 
   // Onglet resté en arrière-plan pendant qu'autre chose changeait sa taille
@@ -189,11 +201,11 @@ function TerminalInstance({ id, isActive, mode, toTerminal, instancesRef }) {
   return (
     <div style={{ display: isActive ? 'flex' : 'none', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {!connected && (
-        <div className="msg-system-wrap" style={{ padding: '8px 12px 0' }}>
-          <span className="msg-system">⚠ terminal déconnecté — reconnexion en cours…</span>
+        <div className="msg-system-wrap term-status">
+          <span className="badge cut bg-md"><Icone nom="attention" /> Terminal déconnecté, reconnexion en cours…</span>
         </div>
       )}
-      <div ref={containerRef} style={{ flex: 1, minHeight: 0, padding: '8px 12px' }} />
+      <div ref={containerRef} className="term-screen" />
     </div>
   )
 }
@@ -254,46 +266,35 @@ export default function TerminalPanel({ variant, gridArea, onActivate }) {
   }
 
   return (
-    <div className="panel is-main" style={{ gridArea }} data-slot={gridArea}>
+    <div className="panel is-main coupe" style={{ gridArea }} data-slot={gridArea}>
       <div className="panel-full">
         <div className="term-tabbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', minWidth: 0 }}>
+          <div className="term-tabs-wrap">
+            <div className="term-tabs" role="tablist" aria-label="Terminaux">
               {tabs.map((tab) => (
-                <div
-                  key={tab.id}
-                  className={`term-tab${tab.id === activeTabId ? ' active' : ''}`}
-                  onClick={() => setActiveTabId(tab.id)}
-                >
-                  <span style={{ color: 'var(--lo)' }}>›_</span>&nbsp;{tab.name}
+                <div key={tab.id} className={`term-tab cut${tab.id === activeTabId ? ' active' : ''}`}>
+                  <button type="button" role="tab" aria-selected={tab.id === activeTabId} className="term-tab-btn"
+                    onClick={() => setActiveTabId(tab.id)}>
+                    <Icone nom="terminal" />{tab.name}
+                  </button>
                   {tabs.length > 1 && (
-                    <span className="term-tab-close" onClick={(e) => handleCloseTab(tab.id, e)} title="Fermer ce terminal">×</span>
+                    <IconBtn kind="ghost" label={`Fermer ${tab.name}`} icon={<Icone nom="fermer" />}
+                      onClick={(e) => handleCloseTab(tab.id, e)} />
                   )}
                 </div>
               ))}
             </div>
-            <button className="term-add" onClick={handleNewTab} title="Nouveau terminal">+</button>
+            <IconBtn kind="ghost" label="Nouveau terminal" icon={<Icone nom="ajouter" />} onClick={handleNewTab} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div className="section-actions">
             {variant !== 'full' && (
-              <button
-                className="btn"
-                style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, width: 24, height: 24, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={onActivate}
-                title="Agrandir ce panneau"
-              >
-                ⤢
-              </button>
+              <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
             )}
-            <button
-              className="btn"
-              style={{ background: 'var(--card-2)', color: 'var(--muted)', borderRadius: 6, padding: '3px 8px', fontSize: 11 }}
-              onClick={handleSendSelectionToChat}
-              title="Envoyer le texte sélectionné dans le terminal au chat"
-            >
-              ▸ Envoyer au chat
-            </button>
-            <span className="kbd">⌘3</span>
+            <Btn kind="ghost" className="term-send" icon={<Icone nom="envoyer" />} onClick={handleSendSelectionToChat}
+              aria-label="Envoyer au chat" data-tip="Envoyer le texte sélectionné dans le terminal au chat">
+              <span className="term-send-label">Envoyer au chat</span>
+            </Btn>
+            <span className="kbd"><Touche>Ctrl 3</Touche></span>
           </div>
         </div>
         {tabs.map((tab) => (

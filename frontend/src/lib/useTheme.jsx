@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useLayoutEffect, useState } from 'react'
 
 // Charte Le Déclic : les couleurs vivent dans declic.css (:root = sombre, [data-theme="light"] = clair),
 // on ne fait que poser data-theme sur <html>. Même logique que design-system/themes.js, mais dans un
@@ -21,7 +21,8 @@ const ThemeContext = createContext(null)
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState(readMode)
 
-  useEffect(() => {
+  // Layout (pas useEffect) : data-theme doit être posé avant les effets des enfants, le terminal y lit ses couleurs.
+  useLayoutEffect(() => {
     applyTheme(mode)
     try { localStorage.setItem(KEY, mode) } catch {}
   }, [mode])

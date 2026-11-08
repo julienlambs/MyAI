@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import DiffView from './DiffView'
+import { Btn, IconBtn, Icone } from '@declic/ui'
 
 // Chargé à la demande (pas d'import statique) — pdfjs-dist pèse plusieurs
 // centaines de Ko, inutile de l'envoyer à tout le monde tant qu'aucun PDF
@@ -55,16 +56,16 @@ function PdfPreview({ url }) {
     return () => { cancelled = true }
   }, [pageNum, numPages])
 
-  if (error) return <div className="preview-error">⚠ Aperçu PDF impossible : {error}</div>
+  if (error) return <div className="preview-error"><Icone nom="erreur" /> Aperçu PDF impossible : {error}</div>
 
   return (
     <div className="pdf-preview">
       <canvas ref={canvasRef} />
       {numPages > 1 && (
         <div className="pdf-preview-nav">
-          <button className="btn" disabled={pageNum <= 1} onClick={() => setPageNum((p) => p - 1)}>◂</button>
+          <IconBtn kind="ghost" label="Page précédente" icon={<Icone nom="retour" />} disabled={pageNum <= 1} onClick={() => setPageNum((p) => p - 1)} />
           <span>{pageNum} / {numPages}</span>
-          <button className="btn" disabled={pageNum >= numPages} onClick={() => setPageNum((p) => p + 1)}>▸</button>
+          <IconBtn kind="ghost" label="Page suivante" icon={<Icone nom="suivant" />} disabled={pageNum >= numPages} onClick={() => setPageNum((p) => p + 1)} />
         </div>
       )}
     </div>
@@ -102,22 +103,22 @@ function TextPreview({ preview, gitStatus, root }) {
     <div className="file-preview">
       {gitStatus && (
         <div className="preview-toolbar">
-          <button className="btn preview-diff-toggle" onClick={toggleDiff}>
-            {showDiff ? '📄 Aperçu' : '🔀 Diff vs HEAD'}
-          </button>
+          <Btn kind="ghost" icon={<Icone nom={showDiff ? 'fichier' : 'git'} />} onClick={toggleDiff} aria-pressed={showDiff}>
+            {showDiff ? 'Aperçu' : 'Diff avec HEAD'}
+          </Btn>
         </div>
       )}
       {showDiff ? (
         <>
-          {diffLoading && <div className="preview-loading">chargement du diff…</div>}
-          {!diffLoading && diffError && <div className="preview-error">⚠ {diffError}</div>}
-          {!diffLoading && !diffError && diff?.binary && <div className="preview-error">Diff indisponible — fichier binaire.</div>}
+          {diffLoading && <div className="preview-loading">Chargement du diff…</div>}
+          {!diffLoading && diffError && <div className="preview-error"><Icone nom="erreur" /> {diffError}</div>}
+          {!diffLoading && !diffError && diff?.binary && <div className="preview-error">Diff indisponible : fichier binaire.</div>}
           {!diffLoading && !diffError && diff && !diff.binary && <DiffView diff={diff} />}
         </>
       ) : (
         <>
           <pre className="preview-text">{preview.content}</pre>
-          {preview.truncated && <div className="preview-truncated">— tronqué, fichier trop volumineux pour un aperçu complet —</div>}
+          {preview.truncated && <div className="preview-truncated">Aperçu tronqué : fichier trop volumineux pour un aperçu complet.</div>}
         </>
       )}
     </div>
@@ -143,10 +144,10 @@ export default function FilePreview({ preview, gitStatus, root }) {
     )
   }
 
-  if (preview.loading) return <div className="file-preview preview-loading">chargement…</div>
-  if (preview.error) return <div className="file-preview preview-error">⚠ {preview.error}</div>
+  if (preview.loading) return <div className="file-preview preview-loading">Chargement…</div>
+  if (preview.error) return <div className="file-preview preview-error"><Icone nom="erreur" /> {preview.error}</div>
   if (preview.kind === 'unsupported') {
-    return <div className="file-preview preview-error">Aperçu indisponible — fichier binaire non reconnu.</div>
+    return <div className="file-preview preview-error">Aperçu indisponible : fichier binaire non reconnu.</div>
   }
 
   return <TextPreview preview={preview} gitStatus={gitStatus} root={root} />

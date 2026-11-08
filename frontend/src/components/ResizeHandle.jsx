@@ -46,7 +46,7 @@ export default function ResizeHandle({ orientation = 'horizontal', value, onChan
       style={{ gridArea, touchAction: 'none' }}
       onPointerDown={handlePointerDown}
     >
-      <div className="grip" />
+      <div className="grip cut" />
     </div>
   )
 }
