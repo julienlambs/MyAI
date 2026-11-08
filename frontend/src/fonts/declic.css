@@ -1,0 +1,50 @@
+/* Déclic — police de titres de Julien Lambs. 100 Extra fin, 200 Plus fin, 300 Fin, 400 Moyen, 600 Large, 700 Plus large, 800 Extra large */
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-ExtraFin.woff2') format('woff2');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-PlusFin.woff2') format('woff2');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-Fin.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-Moyen.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-Large.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-PlusLarge.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Déclic';
+  src: url('Declic-ExtraLarge.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,0 +1,17 @@
+/* Déclic Mono : police à chasse fixe de la charte (blocs de code, terminal), dérivée de Déclic.
+   Deux fichiers : 400 (trait 70) et 700 (trait 110). Pas d'italique (le navigateur le simule). Spec : specs/police-mono.md.
+   Interligne naturel 1,316 : c'est lui qui raccorde les blocs ░▒▓ et les traits de cadre d'une ligne à l'autre. */
+@font-face {
+  font-family: 'Declic Mono';
+  src: url('mono/DeclicMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Declic Mono';
+  src: url('mono/DeclicMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,0 +1,1623 @@
+/* Le Déclic 1.21.0, copié le 08/11/2026 dans MyAI — sans Tailwind : @import "tailwindcss", @source et @theme retirés ;
+   sans texte long : @import quattro.css retiré. Ne rien retoucher ici : les surcharges vont dans index.css. */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Design system — charte « Le Déclic » 1.21.0 (08/11/2026 ; charte validée le 29/10/2026)
+   Version et changements : CHANGELOG.md. Dans une app, noter ici la version copiée et la date.
+   Tokens + briques CSS. Copier ce fichier ET le dossier fonts/ dans le projet ;
+   adapter le chemin de declic.css ci-dessous si fonts/ n'est pas à côté.
+   Projet sans Tailwind : supprimer les lignes @import "tailwindcss" et @source, et le bloc @theme.
+   Couches : les jetons restent hors couche ; la base est dans @layer base, toutes les briques dans
+   @layer components. Avec Tailwind, ses classes utilitaires (hidden, ml-auto, mt-2…) l'emportent donc
+   toujours sur une brique ; sans Tailwind, le CSS du projet écrit hors couche aussi.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Saira:wdth,wght@50..125,100..900&display=swap');
+@import url('fonts/declic.css');
+@import url('fonts/mono.css'); /* code et terminal (Déclic Mono) : le fichier n'est téléchargé que si une page l'utilise */
+
+/* ── Polices : hors de @theme, pour qu'elles existent aussi sans Tailwind (sinon var(--font-mono) est vide) ── */
+:root {
+  --font-title: 'Déclic', sans-serif;
+  --font-sans: 'Saira', system-ui, sans-serif;
+  --font-prose: 'iA Writer Quattro', Georgia, serif;
+  --font-mono: 'Declic Mono', ui-monospace, Consolas, monospace;
+}
+
+/* ── Thème sombre (par défaut) ───────────────────────────────────────────── */
+:root {
+  /* surfaces et texte */
+  --bg:       #09152C;
+  --card:     #111D36;
+  --card2:    #17233C;
+  --border:   #202D47;
+  --borderHi: #2D3A55;
+  --muted:    #C2CEE5;
+  --text:     #F0F5FE;
+  --stroke:   color-mix(in oklab, var(--border), var(--borderHi) 50%); /* trait de 1 px des formes coupées */
+  --edgeStrong: #5B6D91; /* trait marqué (3:1) : champs, ligne de liste riche ouverte */
+
+  /* accent bleu (palette : voir DESIGN_SYSTEM.md) */
+  --pri:   #2C64DF;  /* fond des boutons principaux */
+  --priH:  #3A74F0;  /* survol */
+  --priA:  #1952CF;  /* appui */
+  --link:  #97BAFE;  /* liens, texte accent sur fond sombre */
+  --acc:   #6497FF;  /* rappel de coupe, trait d'onglet, lignes */
+  --focus: #6497FF;  /* viseur */
+  --glow:  #3A74F0;  /* lueur (survol, fond) */
+  --badgeBg: #0E2E77; --badgeTx: #BFD5FE;
+  --selBg:   #0B204F; --selBd:   #3A74F0;
+
+  /* sémantique : hi = urgent / erreur, md = attention, lo = fait / succès */
+  --hi: #E3769B; --md: #DD9C3D; --lo: #08B7A1;
+  --onDanger: #09152C;
+
+  /* graphiques (04/11/2026, specs/graphiques.md) : séries dans cet ordre, jamais en boucle (8e série = « Autres ») ;
+     intensité --gq0 (rien) → --gq5 (beaucoup) ; écart à un objectif : --gd-pos / --gd-neg, milieu --gd-mid.
+     Un graphique de statuts prend --hi / --md / --lo, pas ces couleurs. Texte toujours en --text / --muted. */
+  --g1: #1D86FE; --g2: #129D7B; --g3: #9C65EF; --g4: #E44E46; --g5: #0C9CBB; --g6: #CA8200; --g7: #D64E9B;
+  --gq0: #17233C; --gq1: #0E2E77; --gq2: #123FA4; --gq3: #2C64DF; --gq4: #6497FF; --gq5: #BFD5FE;
+  --gd-pos: var(--g1); --gd-neg: var(--g4); --gd-mid: var(--borderHi);
+
+  /* bouton secondaire « Contour » */
+  --secBg:  color-mix(in oklab, var(--card2), var(--borderHi) 55%);
+  --secBgH: color-mix(in oklab, var(--borderHi), var(--text) 8%);
+  --scrim:  rgb(3 8 20 / .55);
+
+  /* mouvement */
+  --d:  250ms;  /* durée standard */
+  --dh: 150ms;  /* survol, couleurs */
+  --dp: 400ms;  /* panneaux */
+  --ease: cubic-bezier(.6, 0, .1, 1); /* « Nette » */
+
+  /* échelle typo : base 16, ratio 1.2 à 390 px → 1.33 à 1200 px */
+  --t-xs: 13px; --t-sm: 14px; --t-base: 16px;
+  --t-lg:  clamp(19px, calc(19px +  2 * (100vw - 390px) / 810), 21px);
+  --t-xl:  clamp(23px, calc(23px +  5 * (100vw - 390px) / 810), 28px);
+  --t-2xl: clamp(28px, calc(28px + 10 * (100vw - 390px) / 810), 38px);
+  --t-3xl: clamp(33px, calc(33px + 17 * (100vw - 390px) / 810), 50px);
+  --t-4xl: clamp(40px, calc(40px + 27 * (100vw - 390px) / 810), 67px);
+
+  /* coins coupés à 60° (largeur de la coupe ; hauteur = × 1,732) */
+  --c-badge: 2.7px; --c-tab: 3.6px; --c-row: 4.5px; --c-btn: 5.4px; --c-inp: 5.4px;
+  --c-card: 9px; --c-tile: 9px; --c-sheet: 10.8px;
+  /* espacement (04/11/2026) : --s-N = N × 4 px. Marges, écarts et remplissages ne prennent que ces valeurs ;
+     1 à 3 px restent libres (trait, géométrie). Audit : règle 10 */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px;
+  --s-7: 28px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+  /* empilement (04/11/2026) : seules valeurs de z-index permises. Dans un bloc : dessus / viseur ;
+     page : collant (barre de navigation), voile, surface (feuille, fenêtre), toast ; flottants : menu, bulle */
+  --z-fond: -1; --z-dessus: 1; --z-viseur: 2; --z-collant: 3; --z-voile: 8; --z-surface: 9; --z-toast: 10; --z-menu: 60; --z-bulle: 70;
+  /* points de rupture (04/11/2026, classes de fenêtre Material 3) : un @media ne lit pas var(), ces deux valeurs
+     s'écrivent en clair. < 600 téléphone ; 600 à 839 pliant déplié (698 px) et petite tablette ; ≥ 840 tablette
+     paysage et ordinateur. La taille des cibles suit (pointer: coarse), pas la largeur. */
+  --bh: 36px; /* hauteur des boutons (zone tactile portée à 44 px sur écran tactile) */
+  /* tailles réglées par la densité (voir « Densité compacte » plus bas) */
+  --bpx: var(--s-4);     /* marge intérieure des boutons */
+  --fh: 50px;      /* champ à étiquette flottante, et menu déroulant sans étiquette au-dessus */
+  --fh-top: 44px;  /* champ et menu avec étiquette au-dessus (.fw.top) */
+  --fpt: 16px;     /* place de l'étiquette flottante au-dessus du texte saisi */
+  --flt-up: 7px;   /* position de l'étiquette flottante une fois montée */
+  --field-mb: var(--s-4); --card-p: var(--s-4); --opt-my: var(--s-3);
+  /* barres de défilement (voir « Barres de défilement ») : fond du curseur = surface dessous (une carte le redéfinit) */
+  --sb-fond: var(--bg);
+  /* couleurs des barres, haut → bas (sombre : bleu 600 → 400) ; formes en SVG, couleurs écrites dedans
+     (un SVG en fond ne lit pas les variables CSS) : triangles (utilitaire), têtes de kunai (design, « -fin » = téléphone,
+     « -plein » = pendant la manipulation) */
+  --sb-1: #2C64DF; --sb-2: #6497FF;
+  --sb-tri-haut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 1 L8 7.06 L1 7.06 Z' fill='none' stroke='%232C64DF' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-bas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 6.56 L8 0.5 L1 0.5 Z' fill='none' stroke='%236497FF' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-haut-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 1 L8 7.06 L1 7.06 Z' fill='%232C64DF' stroke='%232C64DF' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-bas-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 6.56 L8 0.5 L1 0.5 Z' fill='%236497FF' stroke='%236497FF' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --kunai-haut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89' fill='none' stroke='%232C64DF' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0' fill='none' stroke='%236497FF' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-fin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58' fill='none' stroke='%232C64DF' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-fin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0' fill='none' stroke='%236497FF' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89 Z' fill='%232C64DF'/%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89' fill='none' stroke='%232C64DF' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0 Z' fill='%236497FF'/%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0' fill='none' stroke='%236497FF' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-fin-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58 Z' fill='%232C64DF'/%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58' fill='none' stroke='%232C64DF' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-fin-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0 Z' fill='%236497FF'/%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0' fill='none' stroke='%236497FF' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+
+  /* alias des anciens noms (Leeroy), OBSOLÈTES depuis 1.7.0 : retrait en 2.0.0, quand plus aucune app ne les utilise
+     (audit-charte.py règle 1 les signale). Remplaçants : --card2, --borderHi, --pri, --priH, --link, --selBg. */
+  --card-2: var(--card2); --border-hi: var(--borderHi); /* charte-ok : définition des alias */
+  --accent: var(--pri); --accent-hover: var(--priH); --accent-dim: var(--link); /* charte-ok */
+  --accent-soft: color-mix(in oklab, var(--pri) 14%, transparent); --accent-rgb: 44,100,223; /* charte-ok */
+  --header-bg: color-mix(in oklab, var(--bg) 92%, transparent); /* charte-ok */
+
+  color-scheme: dark;
+}
+
+/* ── Densité compacte : <html data-density="compact"> ─────────────────────
+   Pour les apps de travail (tableaux, fiches, formulaires denses). Le texte ne change pas
+   (13 px minimum) et la zone tactile des boutons reste à 44 px. */
+:root[data-density="compact"] {
+  --bh: 32px; --bpx: var(--s-3); --fh: 44px; --fh-top: 36px; --fpt: 14px; --flt-up: 4px;
+  --field-mb: var(--s-3); --card-p: var(--s-3); --opt-my: var(--s-2);
+}
+
+/* ── Thème clair : <html data-theme="light"> (cf. themes.js) ─────────────── */
+:root[data-theme="light"] {
+  --bg: #F3F7FE; --card: #FDFDFF; --card2: #E9F0FE; --border: #D2DFF6; --borderHi: #BDCBE5; --edgeStrong: #8394B5;
+  --muted: #445066; --text: #0C1628;
+  --pri: #1952CF; --priH: #2C64DF; --priA: #123FA4; --link: #1952CF; --acc: #1952CF; --glow: #6497FF;
+  --badgeBg: #DCE8FF; --badgeTx: #123FA4; --selBg: #F0F5FF; --selBd: #2C64DF;
+  --hi: #BE3D70; --md: #B96404; --lo: #058171; --onDanger: #fff;
+  --g1: #0671DF; --g2: #078568; --g3: #874ED7; --g4: #CB3531; --g5: #0C9CBB; --g6: #D78C10; --g7: #BE3686;
+  --gq0: #E9F0FE; --gq1: #DCE8FF; --gq2: #97BAFE; --gq3: #3A74F0; --gq4: #1952CF; --gq5: #0E2E77;
+  --secBg: var(--card2); --secBgH: color-mix(in oklab, var(--card2), var(--borderHi) 45%);
+  --accent-rgb: 25,82,207;
+  color-scheme: light;
+  /* barres de défilement en clair : bleu 800 → 500 (--pri et --acc y sont le même bleu) */
+  --sb-1: #123FA4; --sb-2: #3A74F0;
+  --sb-tri-haut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 1 L8 7.06 L1 7.06 Z' fill='none' stroke='%23123FA4' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-bas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 6.56 L8 0.5 L1 0.5 Z' fill='none' stroke='%233A74F0' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-haut-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 1 L8 7.06 L1 7.06 Z' fill='%23123FA4' stroke='%23123FA4' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --sb-tri-bas-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7.56'%3E%3Cpath d='M4.5 6.56 L8 0.5 L1 0.5 Z' fill='%233A74F0' stroke='%233A74F0' stroke-width='1' stroke-linejoin='miter'/%3E%3C/svg%3E");
+  --kunai-haut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89' fill='none' stroke='%23123FA4' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0' fill='none' stroke='%233A74F0' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-fin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58' fill='none' stroke='%23123FA4' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-fin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0' fill='none' stroke='%233A74F0' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89 Z' fill='%23123FA4'/%3E%3Cpath d='M4 13.89 L4 12.39 L1 10.66 L6 2 L11 10.66 L8 12.39 L8 13.89' fill='none' stroke='%23123FA4' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 13.89'%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0 Z' fill='%233A74F0'/%3E%3Cpath d='M4 0 L4 1.5 L1 3.23 L6 11.89 L11 3.23 L8 1.5 L8 0' fill='none' stroke='%233A74F0' stroke-width='2' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-haut-fin-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58 Z' fill='%23123FA4'/%3E%3Cpath d='M2.5 10.58 L2.5 9.08 L0.5 7.93 L4.5 1 L8.5 7.93 L6.5 9.08 L6.5 10.58' fill='none' stroke='%23123FA4' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+  --kunai-bas-fin-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0 Z' fill='%233A74F0'/%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0' fill='none' stroke='%233A74F0' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
+}
+
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+@layer base {
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: var(--t-base)/1.55 'Saira', system-ui, sans-serif; font-stretch: 110%;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+a { color: var(--link); }
+
+/* titres : Déclic. Corps et UI : Saira 110 % */
+h1, h2, h3, .font-title { font-family: 'Déclic', sans-serif; margin: 0; }
+.h-page { font-weight: 700; font-size: var(--t-3xl); line-height: 1.1; }
+.h-sec  { font-weight: 600; font-size: var(--t-2xl); line-height: 1.15; }
+.h-card { font-weight: 600; font-size: var(--t-xl);  line-height: 1.2; }
+.h-sub  { font-family: 'Saira', sans-serif; font-weight: 500; font-size: var(--t-lg); line-height: 1.4; }
+} /* fin @layer base */
+
+@layer components {
+/* ═══ Formes coupées ═══════════════════════════════════════════════════════
+   .cut  : octogone à coins coupés de largeur --c (hauteur --c × tan 60°).
+   .cut2 : même forme, rentrée d'un trait de 1 px (c − 0,42 px).
+   .cs   : forme tracée = boîte .cut (le trait, padding 1 px) > .in.cut2 (le fond).
+   .acc  : rappel de coupe sur les coins haut gauche + bas droit (bande exacte).
+   Ne jamais animer clip-path sur un élément coupé : animer un enveloppant. */
+.cut  { --v: calc(var(--c) * 1.732); clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--v), 100% calc(100% - var(--v)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--v)), 0 var(--v)); }
+.cut2 { --c2: calc(var(--c) - .42px); --v2: calc(var(--c2) * 1.732); clip-path: polygon(var(--c2) 0, calc(100% - var(--c2)) 0, 100% var(--v2), 100% calc(100% - var(--v2)), calc(100% - var(--c2)) 100%, var(--c2) 100%, 0 calc(100% - var(--v2)), 0 var(--v2)); }
+.cs { position: relative; padding: 1px; background: var(--stroke); }
+.cs > .in { background: var(--f, var(--card)); height: 100%; --sb-fond: var(--f, var(--card)); } /* --sb-fond : fond des curseurs de défilement */
+.cs.acc::before, .cs.acc::after {
+  content: ''; position: absolute; z-index: var(--z-dessus); top: 0; left: 0; pointer-events: none;
+  width: calc(var(--c) + 1px); height: calc(var(--c) * 1.732 + 1px); background: var(--acc);
+  clip-path: polygon(var(--c) 0, calc(var(--c) + .577px) 1px, 1px calc(var(--c) * 1.732 + .268px), 0 calc(var(--c) * 1.732));
+}
+.cs.acc::after { top: auto; left: auto; bottom: 0; right: 0; transform: rotate(180deg); }
+.card { --c: var(--c-card); }
+.card > .in { padding: var(--card-p); }
+
+/* ═══ Coupe native (04/11/2026, 1.2.0, specs/formes-coupees.md) ════════════
+   .coupe : un seul bloc coupé à 60°, sans clip-path. Vraie bordure, et rien n'est rogné : un menu qui sort de la carte,
+   une lueur, un contour de focus. À prendre quand un contenu doit dépasser ; ailleurs .cs > .in reste valable.
+   Natif (Chrome, Edge, Android) : border-radius c / c × 1,732 + corner-shape: bevel. Firefox et Safari : composants.js
+   pose svg.trace (fond + trait, DeclicUI.trace) derrière le contenu ; sans le script, coins droits.
+   Jetons : --c (défaut --c-card), --f fond (défaut --card), --trait (défaut --stroke). .tir : tireté. */
+.coupe, .empty { position: relative; box-sizing: border-box; border: 1px solid var(--trait, var(--stroke)); border-radius: var(--c) / calc(var(--c) * 1.732); corner-shape: bevel; }
+.coupe { --c: var(--c-card); background: var(--f, var(--card)); }
+.coupe.tir { border-style: dashed; }
+.trace { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); overflow: visible; pointer-events: none; z-index: var(--z-fond); }
+.trace polygon { fill: var(--f, var(--card)); stroke: var(--trait, var(--stroke)); stroke-width: 1; }
+.tir > .trace polygon, .empty > .trace polygon { stroke-dasharray: 5 4; }
+@supports not (corner-shape: bevel) {
+  .coupe, .empty { border-radius: 0; }
+  .coupe:has(> .trace), .empty:has(> .trace) { isolation: isolate; border-color: transparent; background: none; }
+}
+
+/* ═══ Viseur (focus) ═══════════════════════════════════════════════════════
+   Anneau de 1,5 px autour de la forme, coupé aux quatre coins + deux segments
+   au milieu des bords haut et bas. Markup : .vfw > (contenu) + VF (cf. patterns.md). */
+.vfw { position: relative; }
+.vf { --t: 1.5px; --co: calc(var(--c) + var(--t) * .4226); --e: 6px; position: absolute; inset: calc(var(--t) * -1); pointer-events: none; opacity: 0; z-index: var(--z-viseur); }
+.vf i { position: absolute; background: var(--focus); }
+.vf .k { width: calc(var(--co) + var(--e)); height: calc(var(--co) * 1.732 + var(--e));
+  clip-path: polygon(calc(var(--co) + var(--e)) 0, var(--co) 0, 0 calc(var(--co) * 1.732), 0 calc(var(--co) * 1.732 + var(--e)), var(--t) calc(var(--co) * 1.732 + var(--e)), var(--t) calc(var(--t) + var(--c) * 1.732), calc(var(--t) + var(--c)) var(--t), calc(var(--co) + var(--e)) var(--t)); }
+.vf .k1 { top: 0; left: 0; } .vf .k2 { top: 0; right: 0; transform: scaleX(-1); }
+.vf .k3 { bottom: 0; right: 0; transform: scale(-1); } .vf .k4 { bottom: 0; left: 0; transform: scaleY(-1); }
+.vf .m { left: calc(50% - 11px); width: 22px; height: var(--t); } .vf .m1 { top: 0; } .vf .m2 { bottom: 0; }
+.vfw.focus > .vf { opacity: 1; animation: vf-in var(--d) var(--ease); }
+.vfw.focus .cs.acc::before, .vfw.focus .cs.acc::after { display: none; } /* pas de double trait sous le viseur */
+@keyframes vf-in { from { transform: scale(1.12, 1.4); opacity: 0; } } /* « resserrement » */
+
+/* ═══ Boutons ══════════════════════════════════════════════════════════════
+   button.bw (lueur au survol, appui .97, zone tactile) > span.b.{pri|sec|ghost|dan}.cut > span.cut2
+   Le <button> est l'enveloppe non coupée : sur écran tactile il grandit à 44 px
+   (padding + marge négative, la mise en page ne bouge pas) et reçoit tout le toucher. */
+:where(.bw) { all: unset; } /* :where pour ne pas écraser les règles suivantes */
+.bw { --hp: 0px; position: relative; display: inline-block; box-sizing: border-box; cursor: pointer; --c: var(--c-btn);
+  padding: var(--hp) 0; margin: calc(var(--hp) * -1) 0; -webkit-tap-highlight-color: transparent;
+  transition: filter var(--dh) var(--ease), transform var(--dh) var(--ease); }
+@media (pointer: coarse) { .bw { --hp: calc((44px - var(--bh)) / 2); } }
+.bw > .vf { inset: calc(var(--hp) - var(--t)) calc(var(--t) * -1); }
+/* bouton à icône seule : carré de --bh ; au toucher il s'élargit aussi à 44 px, comme en hauteur (règle 9, 03/11/2026) */
+.ibtn { --wp: 0px; padding-inline: var(--wp); margin-inline: calc(var(--wp) * -1); }
+@media (pointer: coarse) { .ibtn { --wp: calc((44px - var(--bh)) / 2); } }
+.ibtn .b > span { padding: 0; width: calc(var(--bh) - 2px); }
+.ibtn > .vf { inset: calc(var(--hp) - var(--t)) calc(var(--wp) - var(--t)); }
+.b { display: block; padding: 1px; background: var(--bb); }
+.b > span { display: flex; align-items: center; justify-content: center; gap: var(--s-2); height: calc(var(--bh) - 2px); padding: 0 var(--bpx);
+  background: var(--bf); color: var(--bt); font: 500 var(--t-sm)/1 'Saira', sans-serif; font-stretch: 110%; white-space: nowrap;
+  transition: background var(--dh) var(--ease), color var(--dh) var(--ease); }
+.b.pri   { --bb: var(--pri); --bf: var(--pri); --bt: #fff; }
+.b.sec   { --bb: var(--stroke); --bf: var(--secBg); --bt: var(--text); }
+.b.ghost { --bb: transparent; --bf: transparent; --bt: var(--link); }
+.b.dan   { --bb: var(--hi); --bf: var(--hi); --bt: var(--onDanger); }
+.bw:hover:not(.dis) { filter: drop-shadow(0 0 8px color-mix(in oklab, var(--glow) 70%, transparent)); }
+.bw.dan-w:hover:not(.dis) { filter: drop-shadow(0 0 8px color-mix(in oklab, var(--hi) 60%, transparent)); }
+.bw:hover:not(.dis) .pri   { --bf: var(--priH); --bb: var(--priH); }
+.bw:hover:not(.dis) .sec   { --bf: var(--secBgH); }
+.bw:hover:not(.dis) .ghost { --bf: var(--card2); }
+.bw:hover:not(.dis) .dan   { --bf: color-mix(in oklab, var(--hi), #fff 12%); --bb: var(--bf); }
+.bw:active:not(.dis) { transform: scale(.97); transition-duration: 100ms; }
+.bw:active:not(.dis) .pri { --bf: var(--priA); --bb: var(--priA); }
+.bw:active:not(.dis) .dan { --bf: color-mix(in oklab, var(--hi), #000 12%); --bb: var(--bf); }
+.bw.dis { opacity: .4; pointer-events: none; filter: saturate(.4); }
+.bw.full { display: block; width: 100%; }
+/* chargement : triangle qui tourne */
+.ld { width: 12px; height: 12px; background: currentColor; clip-path: polygon(50% 7%, 100% 93%, 0 93%); animation: ld .9s linear infinite; }
+@keyframes ld { to { transform: rotate(360deg); } }
+/* <declic-loader> (loader.js) : le triangle tient la place tant que le script n'est pas chargé */
+declic-loader { display: inline-block; vertical-align: middle; line-height: 0; }
+declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; height: 12px; background: currentColor; clip-path: polygon(50% 7%, 100% 93%, 0 93%); animation: ld .9s linear infinite; }
+
+/* ═══ Champs ══════════════════════════════════════════════════════════════
+   Deux variantes, même boîte (trait marqué --edgeStrong à 3:1, fond --card, rappel de coupe) :
+   - étiquette flottante (compacte) : .field > .fw.vfw > .cs.acc.cut > .in.cut2 > input[placeholder=" "] + .flt
+     → formulaires denses, réglages, recherche ;
+   - étiquette au-dessus : .field > label.lbl + .fw.top.vfw > .cs.acc.cut > .in.cut2 > input
+     → formulaires de contact ou de saisie longue, où l'étiquette doit rester lisible pendant la frappe ; aussi pour un select. */
+.field { margin-bottom: var(--field-mb); }
+.fw { --c: var(--c-inp); }
+.fw .cs { background: var(--edgeStrong); }
+.fw .cs > .in { --f: var(--card); position: relative; display: flex; align-items: center; }
+.fw input, .fw select, .fw textarea { all: unset; box-sizing: border-box; display: block; width: 100%; height: var(--fh); padding: var(--fpt) var(--s-3) 0; font-size: var(--t-base); color: var(--text); }
+/* menu : boîte de contenu = une ligne de 24 px, centrée par les marges (Chrome Android colle sinon le texte en haut) */
+.fw select { --sh: var(--fh); height: var(--sh); line-height: 24px; padding: calc((var(--sh) - 24px) / 2) 36px calc((var(--sh) - 24px) / 2) 12px; cursor: pointer; }
+.fw.top select { --sh: var(--fh-top); }
+.fw textarea { height: auto; min-height: 96px; padding-top: var(--s-6); }
+.fw .flt { position: absolute; left: 12px; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: var(--t-base); pointer-events: none; transition: all var(--d) var(--ease);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* une ligne : une étiquette longue dans un champ étroit déborderait */
+.fw textarea ~ .flt { top: 18px; }
+.fw :is(input, textarea):is(:focus, :not(:placeholder-shown)) ~ .flt { top: var(--flt-up); transform: none; font-size: var(--t-xs); color: var(--link); } /* jamais sous 13 px */
+.fw .ico ~ .flt { left: 38px; }
+.fw .chev { position: absolute; right: 12px; width: 10px; height: 6px; background: var(--muted); clip-path: polygon(0 0, 100% 0, 50% 100%); pointer-events: none; }
+/* hexagone régulier (60°) en masque vectoriel : net à tous les zooms. (Une bordure découpée par clip-path
+   perdait ses 4 côtés en biais : il ne restait que des bouts de la bordure carrée.) */
+.fw .ico { width: 14px; height: 14px; margin-left: var(--s-3); flex: none; background: var(--muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpolygon points='3.875,1.587 10.125,1.587 13.25,7 10.125,12.413 3.875,12.413 0.75,7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpolygon points='3.875,1.587 10.125,1.587 13.25,7 10.125,12.413 3.875,12.413 0.75,7' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat; }
+.lbl  { display: block; font-size: var(--t-sm); font-weight: 500; margin-bottom: var(--s-2); } /* étiquette au-dessus : select, variante .top */
+.fw.top input, .fw.top textarea { height: var(--fh-top); padding: 0 var(--s-3); }
+.fw.top textarea { height: auto; min-height: 120px; padding: var(--s-3) var(--s-3); }
+.help { font-size: var(--t-xs); color: var(--muted); margin-top: var(--s-1); }
+.field.err .cs { background: var(--hi); }
+.field.err .help { color: var(--hi); }
+.field.dis { opacity: .45; pointer-events: none; }
+/* le rappel de coupe suit l'état : rose en erreur (sinon deux coins restent bleus sur un contour rose), absent si désactivé (le bleu dit « je peux agir ») */
+.field.err .cs.acc::before, .field.err .cs.acc::after { background: var(--hi); }
+.field.dis .cs.acc::before, .field.dis .cs.acc::after { display: none; }
+
+/* case à cocher, radio hexagone, interrupteur : label.opt > input + .ctlw.vfw > … */
+.opt { display: flex; align-items: center; gap: var(--s-3); font-size: var(--t-sm); margin: var(--opt-my) 0; cursor: pointer; user-select: none; }
+.opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+/* toucher : la ligne entière (case + libellé) est la cible ; une zone invisible de 44 px de haut (le ::before appartient
+   au label, donc le toucher coche la case) sans décaler la mise en page (02/11/2026) */
+@media (pointer: coarse) { .opt { position: relative; } .opt::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); } }
+/* …et des lignes de 44 px, sinon les zones de deux options voisines se chevauchent (31 px utiles, 27 en compact ; règle 9, 03/11/2026) */
+@media (pointer: coarse) { .opt { min-height: 44px; margin: 0; } }
+.ctlw { --c: var(--c-tab); display: inline-flex; flex: none; }
+.ctlw.hexw { --c: 0px; }
+.box { width: 20px; height: 20px; padding: 1px; background: var(--stroke); transition: background var(--dh) var(--ease); }
+.box > i { display: block; width: 100%; height: 100%; background: var(--bg); transition: background var(--dh) var(--ease); }
+.box > i::after { content: ''; display: block; width: 100%; height: 100%; background: #fff; clip-path: polygon(18% 52%, 30% 40%, 43% 53%, 72% 24%, 84% 36%, 43% 77%); transform: scale(0); transition: transform var(--dh) var(--ease); }
+.opt input:checked + .ctlw .box, .opt input:checked + .ctlw .box > i { background: var(--pri); }
+.opt input:checked + .ctlw .box > i::after { transform: none; }
+.hex { width: 22px; height: 19.05px; padding: 1.2px; background: var(--stroke); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.hex > i { display: grid; place-items: center; width: 100%; height: 100%; background: var(--bg); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.hex > i::after { content: ''; width: 10.4px; height: 9px; background: var(--pri); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); transform: scale(0); transition: transform var(--dh) var(--ease); }
+.opt input:checked + .ctlw .hex { background: var(--pri); }
+.opt input:checked + .ctlw .hex > i::after { transform: none; }
+.sw { --c: 5px; width: 42px; height: 24px; padding: 1px; background: var(--stroke); transition: background var(--d) var(--ease); }
+.sw > i { display: block; position: relative; width: 100%; height: 100%; background: var(--card2); transition: background var(--d) var(--ease); }
+.sw > i::after { content: ''; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; background: var(--muted); transition: transform var(--d) var(--ease), background var(--d) var(--ease);
+  clip-path: polygon(3.5px 0, 12.5px 0, 16px 6px, 16px 10px, 12.5px 16px, 3.5px 16px, 0 10px, 0 6px); }
+.opt input:checked + .ctlw .sw, .opt input:checked + .ctlw .sw > i { background: var(--pri); }
+.opt input:checked + .ctlw .sw > i::after { transform: translateX(18px); background: #fff; }
+
+/* ═══ Conteneurs ═══════════════════════════════════════════════════════════ */
+.badge { --c: var(--c-badge); display: inline-block; font-size: var(--t-xs); font-weight: 500; padding: 2px var(--s-2); line-height: 1.5; }
+.bg-neu { background: var(--card2); color: var(--muted); }
+.bg-acc { background: var(--badgeBg); color: var(--badgeTx); }
+/* texte sémantique mêlé à 30 % de --text : la couleur pure sur son propre fond à 20 % ne passe pas l'AA (2,9 à 4,7:1) */
+.bg-hi  { background: color-mix(in oklab, var(--hi) 20%, transparent); color: color-mix(in oklab, var(--hi), var(--text) 30%); }
+.bg-md  { background: color-mix(in oklab, var(--md) 20%, transparent); color: color-mix(in oklab, var(--md), var(--text) 30%); }
+.bg-lo  { background: color-mix(in oklab, var(--lo) 20%, transparent); color: color-mix(in oklab, var(--lo), var(--text) 30%); }
+.dot { width: 10.4px; height: 9px; flex: none; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); } /* hexagone régulier : hauteur = largeur × 0,866 (la coupe .cut à 9 × 9 px faisait des côtés inégaux) */
+
+/* lignes de liste en blocs : .list > .li.cs.cut > .in.cut2 */
+.list { display: grid; gap: var(--s-2); }
+.li { --c: var(--c-row); cursor: pointer; }
+.li > .in { --f: var(--card2); display: flex; gap: var(--s-3); align-items: center; padding: var(--s-3) var(--s-3); font-size: var(--t-sm); transition: background var(--dh) var(--ease); }
+.li:hover > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
+.li.sel { background: var(--selBd); }
+.li.sel > .in { --f: var(--selBg); }
+.li .meta { margin-left: auto; color: var(--muted); font-size: var(--t-xs); }
+/* ligne active au clavier (03/11/2026, specs/conteneurs.md) : enveloppe non coupée .liw.vfw > .li.cs.cut > .in.cut2 + viseur.
+   Deux cas : a.liw / button.liw (la ligne ouvre quelque chose : un arrêt de Tab par ligne) ;
+   .list[role="listbox"] > .liw[role="option"] (la ligne se choisit : un seul arrêt de Tab, flèches ; comportement dans composants.js).
+   Le viseur vit sur l'enveloppe (dans le .li coupé, ses coins seraient rognés). */
+:where(.liw) { all: unset; }
+.liw { --c: var(--c-row); position: relative; display: block; box-sizing: border-box; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.liw:hover > .li > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
+.liw[aria-selected="true"] > .li { background: var(--selBd); }
+.liw[aria-selected="true"] > .li > .in { --f: var(--selBg); }
+@media (pointer: coarse) { .liw > .li > .in { min-height: 44px; box-sizing: border-box; } }
+.stagger > * { animation: rise 300ms var(--ease) backwards; }
+.stagger > :nth-child(2) { animation-delay: 80ms; } .stagger > :nth-child(3) { animation-delay: 160ms; }
+.stagger > :nth-child(4) { animation-delay: 240ms; } .stagger > :nth-child(5) { animation-delay: 320ms; }
+.stagger > :nth-child(n+6) { animation-delay: 400ms; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+
+/* ═══ Liste riche : lignes à plusieurs informations, avec un détail qui se déplie ═══
+   .lrs > .lr.cs.acc.cut[.open] > .in.cut2 > (.lr-head > .lr-media + .lr-main(.lr-meta + .lr-title + .lr-sub) + .lr-act) + .lr-det > div > div
+   Repos : fond --card, trait --stroke. Survol (souris) : fond éclairci. Ouvert : fond --card2, trait --edgeStrong, rappel de coupe.
+   Toute la ligne déplie le détail ; seul un lien secondaire dans .lr-act navigue. Le bouton porte aria-expanded.
+   Sous 700 px : le média passe en haut à droite, le texte et les actions prennent toute la largeur.
+   .lrs.compact : densité des listes longues (apps) ; la version aérée sert aux vitrines (3 à 8 éléments). */
+.lrs { display: grid; gap: var(--s-2); }
+.lr { --c: var(--c-card); }
+.lr > .in { --f: var(--card); padding: 0 var(--s-6); transition: background var(--dh) var(--ease); }
+.lr:not(.open)::before, .lr:not(.open)::after { display: none; } /* rappel de coupe : seulement ouvert */
+.lr.open { background: var(--edgeStrong); }
+.lr.open > .in { --f: var(--card2); }
+@media (hover: hover) { .lr:not(.open):hover > .in { --f: color-mix(in oklab, var(--card), var(--borderHi) 45%); } }
+.lr-head { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "media main act"; gap: 0 var(--s-6); padding: var(--s-5) 0; align-items: start; cursor: pointer; }
+.lr-media { grid-area: media; width: 64px; height: 64px; flex: none; }
+.lr-main { grid-area: main; min-width: 0; }
+.lr-meta { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; font-size: var(--t-sm); font-weight: 500; color: var(--link); margin-bottom: var(--s-1); }
+.lr-title { font: 600 var(--t-xl)/1.2 'Déclic', sans-serif; margin: 0 0 var(--s-1); }
+.lr-sub { font-size: var(--t-sm); color: var(--muted); margin: 0; }
+.lr-act { grid-area: act; display: flex; gap: var(--s-6); align-items: center; font-size: var(--t-sm); font-weight: 500; white-space: nowrap; }
+.lr-act button { all: unset; display: inline-flex; gap: var(--s-2); align-items: center; color: var(--link); cursor: pointer; min-height: 24px; }
+.lr-act a { display: inline-flex; align-items: center; min-height: 24px; color: var(--muted); text-decoration: none; }
+/* texte cliquable sans enveloppe : contour de 1,5 px au clavier, comme .gc-hint (règle 9, 03/11/2026) */
+.lr-act button:focus-visible, .lr-act a:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+.lr-chev { width: 9px; height: 5px; background: currentColor; clip-path: polygon(0 0, 100% 0, 50% 100%); transition: transform var(--d) var(--ease); }
+.lr.open .lr-chev { transform: rotate(180deg); }
+.lr-det { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dp) var(--ease); }
+.lr-det > div { overflow: hidden; }
+.lr-det > div > div { padding: 0 0 var(--s-6); }
+.lr.open .lr-det { grid-template-rows: 1fr; }
+@media (max-width: 599.98px) { /* téléphone (classe « compacte ») */
+  .lr > .in { padding: 0 var(--s-5); }
+  .lr-head { grid-template-columns: 1fr 48px; grid-template-areas: "meta media" "title media" "sub sub" "act act"; gap: 0 var(--s-3); }
+  .lr-main { display: contents; }
+  .lr-meta { grid-area: meta; } .lr-title { grid-area: title; align-self: end; } .lr-sub { grid-area: sub; }
+  .lr-media { width: 48px; height: 48px; }
+  .lr-act { justify-content: space-between; margin-top: var(--s-2); }
+}
+/* cibles de 44 px au toucher, quelle que soit la largeur (pliant déplié compris) ; même poids que .lr-act button, sinon les 24 px gagnent */
+@media (pointer: coarse) { .lr-act > button, .lr-act > a { min-height: 44px; } }
+.lrs.compact { gap: var(--s-2); }
+.compact .lr { --c: 6px; }
+.compact .lr > .in { padding: 0 var(--s-4); }
+.compact .lr-head { padding: var(--s-3) 0; gap: 0 var(--s-3); }
+.compact .lr-title { font-size: var(--t-lg); }
+.compact .lr-media { width: 40px; height: 40px; }
+.compact .lr-det > div > div { padding-bottom: var(--s-4); }
+
+/* onglets soulignés : trait de 2,5 px, bouts à 60°, qui glisse (position en JS) */
+.tabs { position: relative; display: inline-flex; gap: 2px; max-width: 100%; overflow-x: auto; border-bottom: 1px solid var(--stroke); }
+.tabs button { all: unset; position: relative; z-index: var(--z-dessus); padding: var(--s-2) var(--s-4); font-size: var(--t-sm); color: var(--muted); cursor: pointer; white-space: nowrap; transition: color var(--d) var(--ease); }
+.tabs button[aria-selected="true"] { color: var(--text); }
+/* focus au clavier : contour à l'intérieur (.tabs défile en largeur, un contour extérieur serait rogné) ; 44 px au toucher (règle 9, 03/11/2026) */
+.tabs button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -1.5px; }
+@media (pointer: coarse) { .tabs button { display: inline-flex; align-items: center; box-sizing: border-box; min-height: 44px; } }
+.tabs .ind { position: absolute; bottom: 0; height: 2.5px; background: var(--acc); clip-path: polygon(1.44px 0, calc(100% - 1.44px) 0, 100% 100%, 0 100%);
+  transition: left var(--d) var(--ease), width var(--d) var(--ease); }
+
+/* ═══ Barres de défilement : « utilitaire » et « design » ═══════════════════════
+   Choisies par Julien le 31/10/2026 (brouillons/barre-defilement/). Principes communs :
+   - un fil d'Ariane, « fondu » : au-dessus du curseur il a la couleur du haut (--sb-1), en dessous celle du bas
+     (--sb-2) ; Chrome dessine à part les morceaux de piste :start et :end ;
+   - Chrome coupe ces morceaux au MILIEU du curseur (ils passent dessous) : le curseur a donc un fond opaque, la
+     couleur de la surface (--sb-fond : --bg, et la couleur de la carte dans une carte .cs > .in ; à redéfinir sur un
+     bloc défilant d'une autre couleur). Ce fond s'arrête 1 px avant chaque bord (le bord tombe souvent sur une
+     fraction de pixel : sinon un trait sombre au raccord), et un bout de fil va du bord jusque dans chaque pointe ;
+   - formes en SVG (pas de clip-path sur une barre), couleurs par thème dans les jetons --sb-* et --kunai-* ;
+   - pas de changement au survol : le fil ne pourrait pas suivre ;
+   - barre de la page : Chrome la dessine avec le style de body, et n'accepte pour les morceaux de piste qu'un
+     sélecteur posé sur body lui-même ; :root est gardé pour les navigateurs qui suivent html ;
+   - Firefox : couleur et épaisseur seulement (bloc @supports) ; Chrome Android : barres flottantes du système. */
+
+/* ── Utilitaire (par défaut, partout : champs, tableaux, fenêtres, listes) ──────
+   Deux triangles de 9 px en trait de 1 px (pointe en haut, pointe en bas) aux extrémités du curseur, reliés par un
+   segment de 1 px en dégradé. Curseur de 48 px au moins : sur une page longue, les pointes sont à 48 px l'une de
+   l'autre ; sur une page courte, plus écartées (elles restent aux bouts du vrai curseur, donc sous le doigt).
+   Pendant la manipulation : triangles pleins, segment de 3 px (impair : centré au pixel près sur 9 px). */
+::-webkit-scrollbar { width: 13px; height: 13px; }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-track { background: none; }
+::-webkit-scrollbar-track-piece:start { background: linear-gradient(var(--sb-1), var(--sb-1)) center / 1px 100% no-repeat; }
+::-webkit-scrollbar-track-piece:end { background: linear-gradient(var(--sb-2), var(--sb-2)) center / 1px 100% no-repeat; }
+::-webkit-scrollbar-track-piece:horizontal { background-size: 100% 1px; }
+::-webkit-scrollbar-thumb {
+  --tri-haut: var(--sb-tri-haut); --tri-bas: var(--sb-tri-bas); --manche: 1px;
+  border: 0 solid transparent; border-width: 0 2px; min-height: 48px;
+  background:
+    var(--tri-haut) 50% 0 / 9px 7.56px no-repeat,
+    var(--tri-bas) 50% 100% / 9px 7.56px no-repeat,
+    linear-gradient(var(--sb-1), var(--sb-2)) 50% 7.06px / var(--manche) calc(100% - 14.12px) no-repeat,
+    /* fil entre le bord du curseur et chaque pointe, qui mord d'1 px dans la pointe */
+    linear-gradient(var(--sb-1), var(--sb-1)) 50% 0 / 1px 2.5px no-repeat,
+    linear-gradient(var(--sb-2), var(--sb-2)) 50% 100% / 1px 2.5px no-repeat,
+    linear-gradient(var(--sb-fond), var(--sb-fond)) 0 1px / 100% calc(100% - 2px) no-repeat;
+  background-origin: padding-box; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:active { --tri-haut: var(--sb-tri-haut-plein); --tri-bas: var(--sb-tri-bas-plein); --manche: 3px; }
+/* barre horizontale : le segment seul, en dégradé */
+::-webkit-scrollbar-thumb:horizontal { border-width: 6px 0; min-height: 0; min-width: 48px;
+  background: linear-gradient(90deg, var(--sb-1), var(--sb-2)) padding-box; }
+
+/* ── Design (barre de la page, blocs .defile-design) : double kunai en trait sur le fil d'Ariane ──
+   Pointe à 60°, base qui se resserre à 30° jusqu'au manche ; contour en dégradé (bleu du haut → bleu du bas).
+   Desktop : trait et fil de 2 px, têtes de 12 px, manche de 6 px. Téléphone (tactile et moins de 720 px de large, ou
+   moins de 500 px de haut en paysage ; un téléphone pliant déplié compris) : trait et fil de 1 px, têtes de 9 px,
+   manche de 5 px. Tablettes (dès l'iPad mini, 744 px) et ordinateurs : version desktop.
+   Pendant la manipulation : têtes et manche pleins du dégradé (mêmes couleurs : la fusion avec le fil tient). */
+:root::-webkit-scrollbar, body::-webkit-scrollbar, .defile-design::-webkit-scrollbar { width: 16px; height: 16px; }
+:root::-webkit-scrollbar-track-piece:start, body::-webkit-scrollbar-track-piece:start, .defile-design::-webkit-scrollbar-track-piece:start { background: linear-gradient(var(--sb-1), var(--sb-1)) center / 2px 100% no-repeat; }
+:root::-webkit-scrollbar-track-piece:end, body::-webkit-scrollbar-track-piece:end, .defile-design::-webkit-scrollbar-track-piece:end { background: linear-gradient(var(--sb-2), var(--sb-2)) center / 2px 100% no-repeat; }
+:root::-webkit-scrollbar-track-piece:horizontal, body::-webkit-scrollbar-track-piece:horizontal, .defile-design::-webkit-scrollbar-track-piece:horizontal { background-size: 100% 2px; }
+:root::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb, .defile-design::-webkit-scrollbar-thumb {
+  --k-haut: var(--kunai-haut); --k-bas: var(--kunai-bas); --k-m1: transparent; --k-m2: transparent;
+  border: 0 solid transparent; border-width: 0 2px; min-height: 36px;
+  background:
+    var(--k-haut) 50% 0 / 12px 13.89px no-repeat,
+    var(--k-bas) 50% 100% / 12px 13.89px no-repeat,
+    linear-gradient(var(--sb-1), var(--sb-2)) 3px 12.39px / 2px calc(100% - 24.78px) no-repeat,
+    linear-gradient(var(--sb-1), var(--sb-2)) 7px 12.39px / 2px calc(100% - 24.78px) no-repeat,
+    /* intérieur du manche : transparent au repos (le fond du curseur passe), dégradé pendant la manipulation */
+    linear-gradient(var(--k-m1), var(--k-m2)) 50% 12.39px / 6px calc(100% - 24.78px) no-repeat,
+    /* fil entre le bord du curseur et chaque pointe, qui mord dans la pointe */
+    linear-gradient(var(--sb-1), var(--sb-1)) 50% 0 / 2px 3.5px no-repeat,
+    linear-gradient(var(--sb-2), var(--sb-2)) 50% 100% / 2px 3.5px no-repeat,
+    linear-gradient(var(--sb-fond), var(--sb-fond)) 0 1px / 100% calc(100% - 2px) no-repeat;
+  background-origin: padding-box; background-clip: padding-box; }
+:root::-webkit-scrollbar-thumb:active, body::-webkit-scrollbar-thumb:active, .defile-design::-webkit-scrollbar-thumb:active { --k-haut: var(--kunai-haut-plein); --k-bas: var(--kunai-bas-plein); --k-m1: var(--sb-1); --k-m2: var(--sb-2); }
+:root::-webkit-scrollbar-thumb:horizontal, body::-webkit-scrollbar-thumb:horizontal, .defile-design::-webkit-scrollbar-thumb:horizontal { border-width: 7px 0; min-height: 0; min-width: 36px;
+  background: linear-gradient(90deg, var(--sb-1), var(--sb-2)) padding-box; }
+@media (pointer: coarse) and (max-width: 839.98px), (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  :root::-webkit-scrollbar, body::-webkit-scrollbar, .defile-design::-webkit-scrollbar { width: 13px; height: 13px; }
+  :root::-webkit-scrollbar-track-piece:start, body::-webkit-scrollbar-track-piece:start, .defile-design::-webkit-scrollbar-track-piece:start { background: linear-gradient(var(--sb-1), var(--sb-1)) center / 1px 100% no-repeat; }
+  :root::-webkit-scrollbar-track-piece:end, body::-webkit-scrollbar-track-piece:end, .defile-design::-webkit-scrollbar-track-piece:end { background: linear-gradient(var(--sb-2), var(--sb-2)) center / 1px 100% no-repeat; }
+  :root::-webkit-scrollbar-track-piece:horizontal, body::-webkit-scrollbar-track-piece:horizontal, .defile-design::-webkit-scrollbar-track-piece:horizontal { background-size: 100% 1px; }
+  :root::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb, .defile-design::-webkit-scrollbar-thumb {
+    --k-haut: var(--kunai-haut-fin); --k-bas: var(--kunai-bas-fin); --k-m1: transparent; --k-m2: transparent;
+    border: 0 solid transparent; border-width: 0 2px; min-height: 30px;
+    background:
+      var(--k-haut) 50% 0 / 9px 10.58px no-repeat,
+      var(--k-bas) 50% 100% / 9px 10.58px no-repeat,
+      linear-gradient(var(--sb-1), var(--sb-2)) 2px 9.08px / 1px calc(100% - 18.16px) no-repeat,
+      linear-gradient(var(--sb-1), var(--sb-2)) 6px 9.08px / 1px calc(100% - 18.16px) no-repeat,
+      /* intérieur du manche : transparent au repos (le fond du curseur passe), dégradé pendant la manipulation */
+      linear-gradient(var(--k-m1), var(--k-m2)) 50% 9.08px / 5px calc(100% - 18.16px) no-repeat,
+      /* fil entre le bord du curseur et chaque pointe, qui mord dans la pointe */
+      linear-gradient(var(--sb-1), var(--sb-1)) 50% 0 / 1px 2.5px no-repeat,
+      linear-gradient(var(--sb-2), var(--sb-2)) 50% 100% / 1px 2.5px no-repeat,
+      linear-gradient(var(--sb-fond), var(--sb-fond)) 0 1px / 100% calc(100% - 2px) no-repeat;
+    background-origin: padding-box; background-clip: padding-box; }
+  :root::-webkit-scrollbar-thumb:active, body::-webkit-scrollbar-thumb:active, .defile-design::-webkit-scrollbar-thumb:active { --k-haut: var(--kunai-haut-fin-plein); --k-bas: var(--kunai-bas-fin-plein); --k-m1: var(--sb-1); --k-m2: var(--sb-2); }
+  :root::-webkit-scrollbar-thumb:horizontal, body::-webkit-scrollbar-thumb:horizontal, .defile-design::-webkit-scrollbar-thumb:horizontal { border-width: 6px 0; min-height: 0; min-width: 30px;
+    background: linear-gradient(90deg, var(--sb-1), var(--sb-2)) padding-box; }
+}
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--sb-1) transparent; }
+}
+
+/* ═══ Surfaces ═════════════════════════════════════════════════════════════
+   Apparition « Coupe 60° » sur l'enveloppant (cf. patterns.md, wipe60). */
+.scrim { position: fixed; inset: 0; background: var(--scrim); opacity: 0; pointer-events: none; transition: opacity var(--d) var(--ease); z-index: var(--z-voile); }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.sheet { --c: var(--c-sheet); } .sheet > .in { padding: var(--s-4) var(--s-4) var(--s-6); }
+.grab  { --c: 2px; width: 40px; height: 4px; background: var(--borderHi); margin: 0 auto var(--s-3); }
+.modal { --c: var(--c-sheet); } .modal > .in { padding: var(--s-5); }
+.toast { --c: var(--c-btn); } .toast > .in { --f: var(--card2); padding: var(--s-3) var(--s-4); font-size: var(--t-sm); display: flex; gap: var(--s-3); align-items: center; }
+
+/* ═══ Fond sphinx fractal + lueur (cf. patterns.md, SphinxBackground) ══════ */
+/* La lueur est une « lentille » de 300 px déplacée en transform (composition seule, ni recalcul
+   de style ni repeinte) : la lentille suit le doigt, le canvas accent qu'elle contient fait le
+   déplacement inverse pour rester calé sur le pavage. */
+.bg-sphinx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: var(--z-fond); }
+.bg-sphinx-lens, .bg-sphinx-halo { position: fixed; left: -150px; top: -150px; width: 300px; height: 300px; pointer-events: none; z-index: var(--z-fond);
+  will-change: transform; opacity: 0; transition: opacity 1000ms; }
+.bg-sphinx-lens { overflow: hidden; -webkit-mask-image: radial-gradient(closest-side, #000, transparent); mask-image: radial-gradient(closest-side, #000, transparent); }
+.bg-sphinx-lens > canvas { position: absolute; left: 150px; top: 150px; will-change: transform; }
+.bg-sphinx-halo { background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 22%, transparent), transparent 70%); }
+.glow-on .bg-sphinx-lens, .glow-on .bg-sphinx-halo { opacity: 1; transition-duration: 150ms; }
+/* aura (option, fond.js) : lueur permanente autour d'un élément data-aura ; taille et position posées en JS */
+.bg-sphinx-aura, .bg-sphinx-aura-halo { position: fixed; left: 0; top: 0; pointer-events: none; z-index: var(--z-fond); will-change: transform; }
+.bg-sphinx-aura { overflow: hidden; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent); mask-image: radial-gradient(closest-side, #000 55%, transparent); }
+.bg-sphinx-aura > canvas { position: absolute; left: 0; top: 0; will-change: transform; }
+.bg-sphinx-aura-halo { background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 26%, transparent) 50%, transparent); }
+/* logo inline (logo/logo-inline.html) : couleurs et joints portés par le SVG (--acc, --text, --bg) */
+.logo-declic { display: block; height: 30px; width: auto; }
+
+/* ── Briques venues d'Ariane (31/10/2026) : gestes et saisie ──────────────
+   .gc   : carte à geste, glissée dans 3 directions ; la transformation est posée par le JS.
+   .gauge: jauge à segments, jamais de chiffre.
+   .cpw  : bloc à copier (enveloppe non coupée qui porte le viseur) > .cp coupé, creusé.
+   .sbar : barre de saisie, champ + bouton principal dans un seul contour ; icône <declic-envoi> (envoi.js). */
+.gc { --c: var(--c-card); touch-action: none; cursor: grab; transition: transform var(--d) var(--ease), opacity var(--d) var(--ease); }
+.gc > .in { padding: var(--s-4) var(--s-5); transition: background var(--dh) var(--ease); }
+.gc.drag { transition: none; cursor: grabbing; }
+.gc.armed { background: var(--acc); }
+.gc.armed > .in { --f: var(--selBg); }
+.gc.armed::before, .gc.armed::after { display: none; }
+.gc.gone { opacity: 0; }
+.gc-hint { display: flex; justify-content: center; gap: var(--s-5); margin-top: var(--s-3); font-size: var(--t-xs); color: var(--muted); }
+.gc-hint > * { opacity: .7; transition: color var(--dh) var(--ease), opacity var(--dh) var(--ease); }
+.gc-hint > .on { color: var(--link); opacity: 1; font-weight: 500; }
+.gc-hint > button { all: unset; cursor: pointer; padding: var(--s-1) 2px; }
+.gc-hint > button:focus-visible { color: var(--link); opacity: 1; outline: 1.5px solid var(--focus); outline-offset: 2px; }
+
+.gauge { --gh: 4px; --gw: 18px; display: flex; gap: var(--s-1); justify-content: center; }
+.gauge.big { --gh: 8px; --gw: 28px; }
+.gauge > i { width: var(--gw); height: var(--gh); background: var(--border); transition: background var(--d) var(--ease);
+  clip-path: polygon(calc(var(--gh) * .577) 0, 100% 0, calc(100% - var(--gh) * .577) 100%, 0 100%); }
+.gauge > i.on { background: var(--acc); }
+
+.cpw { all: unset; box-sizing: border-box; position: relative; display: block; width: 100%; cursor: pointer; --c: var(--c-card); -webkit-tap-highlight-color: transparent; }
+.cp { display: block; transition: transform 100ms var(--ease); }
+.cp > .in { --f: var(--bg); display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-3) var(--s-4); text-align: left; }
+.cp-tx { font-size: var(--t-base); line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+.cp-cta { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); font-weight: 500; color: var(--link); transition: color var(--dh) var(--ease); }
+.cp-cta::before { content: ''; width: 9px; height: 11px; flex: none; background: currentColor; clip-path: polygon(0 0, 70% 0, 100% 26%, 100% 100%, 0 100%); }
+.cpw.done .cp-cta { color: var(--lo); }
+.cpw.done .cp-cta::before { width: 11px; clip-path: polygon(10% 55%, 30% 40%, 45% 58%, 80% 15%, 100% 30%, 45% 90%); }
+.cpw:active .cp { transform: scale(.99); }
+
+.sbar { --c: var(--c-inp); display: block; }
+.sbar .cs > .in { gap: var(--s-2); padding-right: var(--s-1); }
+.sbar input { flex: 1; min-width: 0; height: 48px; padding: 0 var(--s-4); }
+.sbar input::placeholder { color: var(--muted); opacity: 1; }
+.sbar .bw { --bh: 38px; --bpx: var(--s-4); --c: 4.5px; flex: none; }
+.sbar .bw .b > span { width: 56px; padding: 0; font-size: var(--t-lg); } /* largeur fixe : le bouton ne bouge pas pendant l'envoi */
+.sbar.busy { pointer-events: none; }
+.sbar.busy input { opacity: .4; } /* le bouton reste plein : il porte l'animation d'envoi */
+/* erreurs (03/11/2026, choix C de Julien, specs/gestes-et-saisie.md) :
+   - barre : .field.err > form.sbar + .help (l'état d'erreur des champs, sans rien de nouveau) ; le bouton devient « Réessayer »
+     (.bw.retry, largeur libre) jusqu'au prochain envoi ; le texte reste dans le champ ;
+   - carte : la carte reste partie, une ligne .gc-fail prend sa place (raison, « Réessayer », « Annuler » qui ramène la carte). */
+.sbar .bw.retry .b > span { width: auto; padding: 0 var(--s-3); gap: var(--s-2); font-size: var(--t-sm); }
+.gc-fail { --c: var(--c-row); }
+.gc-fail > .in { --f: var(--card2); display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; padding: var(--s-3) var(--s-3); font-size: var(--t-sm); }
+.gc-fail .gc-fail-tx { flex: 1; min-width: 12ch; }
+.gc-fail .gc-fail-acts { margin-left: auto; display: flex; gap: var(--s-2); }
+.gc-fail .bw { --bh: 32px; }
+/* flèche d'envoi sans envoi.js : une flèche texte */
+declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Saira', sans-serif; }
+/* ═══ Texte long : .prose ═══════════════════════════════════════════════════
+   Pour le contenu rédigé du site (articles, études de cas, descriptions longues) : iA Writer Quattro à 18 px,
+   interligne 1,7, colonne de 68 caractères. Jamais pour l'interface (menus, boutons, étiquettes, tableaux :
+   Saira). Titres en Déclic. Quattro n'a que 400 et 700, droit et italique, et pas d'axe de largeur.
+   Choix du 02/11/2026 : specs/police-prose.md. */
+.prose { font: 400 18px/1.7 'iA Writer Quattro', Georgia, serif; font-stretch: normal; max-width: 68ch; }
+.prose > * { margin: 0 0 1.1em; }
+.prose strong { font-weight: 700; }
+.prose h2, .prose h3 { font-family: 'Déclic', sans-serif; font-style: normal; line-height: 1.2; margin: 1.9em 0 .55em; }
+.prose h2 { font-weight: 600; font-size: var(--t-xl); }
+.prose h3 { font-weight: 600; font-size: var(--t-lg); }
+.prose ul, .prose ol { padding-left: 1.3em; }
+.prose li { margin: .25em 0; }
+.prose li::marker { color: var(--acc); }
+.prose blockquote { margin: 1.4em 0; padding: .1em 0 .1em 1.1em; border-left: 2px solid var(--acc); color: var(--muted); font-style: italic; }
+.prose a { color: var(--link); text-underline-offset: 3px; }
+.prose code { font-family: 'Declic Mono', ui-monospace, Consolas, 'Courier New', monospace; font-size: .82em; background: var(--card2); padding: .12em .4em; }
+.prose pre { font-family: 'Declic Mono', ui-monospace, Consolas, monospace; margin: 1.2em 0; padding: var(--s-4) var(--s-4); background: var(--card); border: 1px solid var(--stroke); overflow-x: auto; font-size: .82em; line-height: 1.55; }
+.prose pre code { background: none; padding: 0; font-size: 1em; }
+.prose-lede { font: 400 21.6px/1.5 'iA Writer Quattro', Georgia, serif; color: var(--muted); } /* chapô : 1,2 × le texte */
+
+/* ═══ Composants du 02/11/2026 ═══════════════════════════════════════════════
+   Menu déroulant, infobulle, fil d'Ariane, barre de progression, carte de statistique, squelette.
+   Comportement : composants.js (menu dessiné au pointeur fin seulement, délai et position de l'infobulle, repli du fil,
+   compteur, délai du squelette). Specs : specs/menu-deroulant.md, infobulle.md, fil-ariane.md, barre-progression.md,
+   carte-stat.md, squelette.md. Aucun jeton global ajouté : seules des variables locales (--p, --ax, --mh, --i…). */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } /* texte pour lecteurs d'écran seulement */
+
+/* ── Menu déroulant ─────────────────────────────────────────────────────────
+   Un <select data-menu> reste la source de la valeur (formulaire, validation) ; sur pointeur fin, composants.js pose dessus
+   un bouton .dd-btn (role="combobox") et une liste .dd-pop rendue au niveau de la page. Sur écran tactile, le <select> natif reste.
+   Erreur et désactivé : ceux des champs (.field.err, .field.dis, rappel de coupe déjà géré plus haut). */
+.dd .chev { transition: transform var(--d) var(--ease); }
+.dd[data-open="true"] .chev { transform: rotate(180deg); }
+.fw select.dd-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.dd-btn { all: unset; box-sizing: border-box; position: relative; display: flex; align-items: center; width: 100%; height: var(--fh); padding: 0 36px 0 var(--s-3); font-size: var(--t-base); color: var(--text); cursor: pointer; }
+.fw.top .dd-btn { height: var(--fh-top); }
+.dd-btn:disabled { cursor: default; }
+.dd-val { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-val.ph { color: var(--muted); }
+.dd-pop { position: fixed; left: 0; top: 0; z-index: var(--z-menu); }
+.dd-pop.static { position: static; max-width: 360px; } /* aperçu figé (documentation) */
+.dd-pop .pan { --c: var(--c-card); background: var(--edgeStrong); }
+.dd-pop .pan > .in { --f: var(--card2); padding: var(--s-2); max-height: var(--mh, 280px); overflow: auto; }
+.dd-ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.dd-opt { --c: var(--c-row); padding: 1px; background: transparent; cursor: pointer; }
+.dd-opt > .in { display: flex; align-items: center; gap: var(--s-3); min-height: 38px; padding: 0 var(--s-3); font-size: var(--t-base); background: var(--f, transparent); transition: background var(--dh) var(--ease); }
+@media (pointer: coarse) { .dd-opt > .in { min-height: 44px; } }
+.dd-opt.act { background: var(--stroke); }
+.dd-opt.act > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); } /* survol et flèches : le même état « actif » */
+.dd-opt[aria-selected="true"] { background: var(--selBd); } /* la valeur choisie reprend le bloc de .li.sel */
+.dd-opt[aria-selected="true"] > .in { --f: var(--selBg); }
+.dd-opt[aria-disabled="true"] { opacity: .45; cursor: default; }
+.dd-tx { display: grid; min-width: 0; padding: var(--s-2) 0; }
+.dd-d { font-size: var(--t-xs); line-height: 1.35; color: var(--muted); } /* description secondaire facultative */
+.dd-ck { margin-left: auto; width: 12px; height: 12px; flex: none; background: var(--link); clip-path: polygon(18% 52%, 30% 40%, 43% 53%, 72% 24%, 84% 36%, 43% 77%); visibility: hidden; }
+.dd-opt[aria-selected="true"] .dd-ck { visibility: visible; }
+
+/* ── Menu d’actions (04/11/2026, 1.5.0, specs/menu-actions.md) ──────────────────
+   Une règle : 4 actions au plus, chacune avec une icône évidente, app simple → actions en ligne (.al) ;
+   au-delà, actions proches les unes des autres ou app de travail au clavier → menu (.am), feuille du bas au toucher (.amf).
+   Menu : bouton[aria-haspopup="menu"][data-actions="id"] + <template id="id"> (vanilla) ou <ul id="id" hidden> (React),
+   lignes li[data-act] (contenu libre : icône + verbe), li[data-kbd] (raccourci affiché), li.dan, li.sep, li.grp.
+   composants.js le rend au niveau de la page (.dd-pop.am, panneau du menu déroulant) ou en feuille du bas (.amf). */
+.am { min-width: 220px; }
+.am .dd-opt > .in { min-height: 32px; font-size: var(--t-sm); }
+.am .dd-opt:focus, .amf .dd-opt:focus { outline: none; background: var(--stroke); }
+.am .dd-opt:focus > .in, .amf .dd-opt:focus > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
+.am svg, .amf .dd-opt svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
+.am .dd-opt.dan > .in, .am .dd-opt.dan svg, .amf .dd-opt.dan > .in, .amf .dd-opt.dan svg { color: var(--hi); }
+.am .sep, .amf .sep { height: 1px; margin: var(--s-1) var(--s-2); background: var(--stroke); }
+.am .grp, .amf .grp { padding: var(--s-2) var(--s-3) var(--s-1); font-size: var(--t-xs); color: var(--muted); }
+.am kbd { margin-left: auto; font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
+.amf { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-surface); padding: 0 var(--s-2) env(safe-area-inset-bottom, 0px); }
+.amf > div { max-width: 560px; margin: 0 auto; }
+.amf .sheet > .in { --f: var(--card2); padding: var(--s-3) var(--s-3) var(--s-4); }
+.amf-t { display: grid; gap: 2px; padding: 0 var(--s-2) var(--s-3); margin-bottom: var(--s-2); border-bottom: 1px solid var(--stroke); }
+.amf-t b { font-weight: 600; } .amf-t span { font-size: var(--t-xs); color: var(--muted); }
+.amf .dd-opt > .in { min-height: 48px; gap: var(--s-3); font-size: var(--t-base); }
+.amf .dd-opt svg { width: 20px; height: 20px; }
+.amf kbd { display: none; } /* raccourcis inutiles au doigt */
+.amf-x { margin-top: var(--s-3); }
+/* actions en ligne : .al-hote > (… .al-cache …) + .al[role="toolbar"] (boutons-icônes) + bouton[data-actions-ligne] */
+.al { display: none; align-items: center; gap: var(--s-1); }
+.al-hote.al-ouvert .al { display: flex; }
+.al-hote.al-ouvert .al-cache { display: none; }
+.al .sep { width: 1px; height: 20px; margin: 0 var(--s-1); background: var(--stroke); }
+
+/* ── Puces de filtre (04/11/2026, 1.6.0, specs/puces-filtre.md) ─────────────────
+   .pfs[data-puces][role="group"] > button.bw.vfw.pf[aria-pressed][data-filtre] > span.b.sec.cut > span.cut2 > i.hx + texte + span.n
+   + button.pf-effacer. Allumée : fond et trait de la sélection (--selBg / --selBd), hexagone rempli de bleu.
+   Le nombre (.n) dit combien d'éléments resteraient : c'est l'app qui l'écrit. */
+.pfs { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.pf { --bh: 32px; }
+.pf .cut2 { gap: var(--s-2); font-size: var(--t-sm); }
+.pf .n { color: var(--muted); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.pf .n:empty { display: none; }
+.pf[aria-pressed="true"] .b { --bb: var(--selBd); --bf: var(--selBg); }
+.pf .hx { width: 9px; height: 10px; flex: none; background: var(--edgeStrong); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.pf .hx::after { content: ''; display: block; margin: 1px; width: 7px; height: 8px; background: var(--bf); clip-path: inherit; }
+.pf[aria-pressed="true"] .hx, .pf[aria-pressed="true"] .hx::after { background: var(--acc); }
+.pf-effacer { all: unset; cursor: pointer; font-size: var(--t-sm); color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.pf-effacer:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+.pf-effacer[hidden] { display: none; }
+@media (pointer: coarse) { .pfs, .dt-rac { row-gap: var(--s-3); } .dt-rac { margin-bottom: var(--s-3); } } /* zones de 44 px qui ne se chevauchent pas */
+
+/* ── Champ de date (04/11/2026, 1.6.0, specs/champ-date.md) ─────────────────────
+   input[data-date] dans un champ .fw.top : saisie JJ/MM/AAAA, bouton calendrier ajouté par composants.js, aide = la date en
+   toutes lettres (ou l'erreur). data-raccourcis="+1j,+3j,lundi,+2s" : puces de dates habituelles, en option.
+   Calendrier .cal rendu au niveau de la page, au doigt comme à la souris (cases de 44 px au toucher). */
+.fw .dt-btn { --bh: 32px; margin-right: var(--s-1); }
+.dt-rac { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-2); }
+.cal { position: fixed; z-index: var(--z-menu); width: min(320px, calc(100vw - 16px)); }
+.cal[hidden] { display: none; }
+.cal .pan { --c: var(--c-card); background: var(--edgeStrong); }
+.cal .pan > .in { --f: var(--card2); padding: var(--s-3); display: grid; gap: var(--s-2); }
+.cal-tete { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.cal-tete b { font-weight: 600; }
+.cal-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.cal-g .j { padding: var(--s-1) 0; font-size: var(--t-xs); color: var(--muted); }
+.cal-g button { all: unset; --c: var(--c-row); height: 36px; display: grid; place-items: center; font-size: var(--t-sm); font-variant-numeric: tabular-nums; cursor: pointer;
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.cal-g button:hover, .cal-g button:focus-visible { outline: none; background: color-mix(in oklab, var(--card2), var(--borderHi) 60%); }
+.cal-g button:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.cal-g button.hors { color: var(--muted); opacity: .5; }
+.cal-g button.auj { color: var(--link); font-weight: 600; }
+.cal-g button[aria-selected="true"] { background: var(--pri); color: #fff; }
+@media (pointer: coarse) { .cal-g button { height: 44px; } }
+
+/* ── Tableau (04/11/2026, 1.6.0, specs/tableau.md) ──────────────────────────────
+   .tab-z (défile de côté sur écran étroit, 1re colonne fixe) > table.tab ; th[data-tri] > button (tri par composants.js, aria-sort) ;
+   une ligne = un bloc --card2 aux coins coupés, comme .li ; td.num à droite en chiffres alignés ; td.act pour le menu d'actions. */
+.tab-z { position: relative; overflow-x: auto; }
+.tab { width: 100%; border-collapse: separate; border-spacing: 0 var(--s-1); font-size: var(--t-sm); }
+.tab th { padding: var(--s-2) var(--s-3); text-align: left; font-size: var(--t-xs); font-weight: 500; color: var(--muted); white-space: nowrap; }
+.tab td { padding: var(--s-2) var(--s-3); vertical-align: middle; white-space: nowrap; background: var(--card2); }
+.tab td:first-child, .tab th:first-child { position: sticky; left: 0; z-index: var(--z-dessus); }
+.tab th:first-child { background: var(--card); }
+.tab td:first-child { font-weight: 500; clip-path: polygon(var(--c-row) 0, 100% 0, 100% 100%, var(--c-row) 100%, 0 calc(100% - var(--c-row) * 1.732), 0 calc(var(--c-row) * 1.732)); }
+.tab td:last-child { clip-path: polygon(0 0, calc(100% - var(--c-row)) 0, 100% calc(var(--c-row) * 1.732), 100% calc(100% - var(--c-row) * 1.732), calc(100% - var(--c-row)) 100%, 0 100%); }
+.tab tbody tr:hover td { background: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
+.tab .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tab th button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: var(--s-2); }
+.tab th button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+.tab .tri { width: 8px; height: 7px; background: currentColor; opacity: .35; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.tab th[aria-sort] { color: var(--text); }
+.tab th[aria-sort] .tri { opacity: 1; color: var(--link); }
+.tab th[aria-sort="descending"] .tri { transform: rotate(180deg); }
+.tab .act { width: 1%; padding-block: 2px; }
+.tab .ibtn { --bh: 32px; }
+@media (pointer: coarse) { .tab th button { min-height: 44px; min-width: 44px; } .tab .ibtn { --bh: 36px; } .tab .act { padding-block: var(--s-1); } } /* la coupe de la cellule rognerait la zone de 44 px */
+
+/* ── Navigation de l’app (05/11/2026, 1.10.0, specs/navigation.md) ─────────────────
+   Selon la largeur : barre du bas sur téléphone (< 600 px), rail de 600 à 839 px, menu latéral déplié à partir de 840 px ;
+   la barre du haut partout. Comportement (trait qui glisse, nom en infobulle dans le rail) : composants.js.
+   Barre du haut : header.bh > [bouton menu] + logo + h1.bh-titre + .bh-esp + boutons-icônes (button.bw.vfw.ibtn > .b.ghost)
+   Menu latéral : nav.ml > .ml-tete (logo + .ml-nom) + .ml-grp (titre de groupe) + a.ml-it.vfw[aria-current="page"]
+                  > span.ml-in.cut > svg.ic + span.ml-lab, + viseur ; .ml.rail force le rail, .ml.ouvert le menu déplié
+   Barre du bas : nav.bb > a.bb-it[aria-current="page"] (ou button) > span.bb-ic > svg.ic (+ .pas) + span.bb-lab ; 3 à 5 onglets */
+.bh { position: sticky; top: 0; z-index: var(--z-collant); display: flex; align-items: center; gap: var(--s-2); box-sizing: border-box; min-height: 56px;
+  padding: env(safe-area-inset-top, 0px) var(--s-2) 0 var(--s-3); background: var(--card); border-bottom: 1px solid var(--stroke); }
+.bh-titre { margin: 0 0 0 var(--s-1); min-width: 0; font: 600 var(--t-lg)/1.2 'Déclic', 'Saira', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bh-esp { flex: 1; }
+.bh > .bw { flex: none; }
+.bh > svg:not(.ic) { width: 24px; height: 24px; flex: none; } /* logo, version M24 */
+
+.ml { flex: none; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box; width: 232px; padding: var(--s-3) var(--s-2);
+  background: var(--card); border-right: 1px solid var(--stroke); overflow: hidden auto; transition: width var(--dp) var(--ease); }
+.ml-tete { display: flex; align-items: center; gap: var(--s-2); height: 32px; padding: 0 var(--s-3) var(--s-3); white-space: nowrap; font: 600 var(--t-base)/1 'Déclic', 'Saira', sans-serif; }
+.ml-tete > svg { width: 24px; height: 24px; flex: none; margin-left: -2px; } /* logo M24, centré sur les icônes dans le rail */
+.ml-grp { padding: var(--s-3) var(--s-3) var(--s-1); font-size: var(--t-xs); color: var(--muted); white-space: nowrap; }
+:where(.ml-it) { all: unset; }
+.ml-it { --c: var(--c-row); position: relative; display: block; box-sizing: border-box; color: var(--muted); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ml-in { display: flex; align-items: center; gap: var(--s-3); height: 40px; padding: 0 var(--s-3); font-size: var(--t-sm); white-space: nowrap;
+  transition: background var(--dh) var(--ease), color var(--dh) var(--ease); }
+.ml-in > svg { width: 20px; height: 20px; flex: none; fill: currentColor; }
+.ml-it:hover > .ml-in { background: var(--card2); color: var(--text); }
+.ml-it[aria-current="page"] { color: var(--text); }
+.ml-it[aria-current="page"] svg { color: var(--link); }
+/* section ouverte : trait bleu à gauche, bouts à 60° (le trait des onglets soulignés, tourné), pas de fond (piste B) */
+.ml-it::before { content: ''; position: absolute; z-index: var(--z-dessus); left: 0; top: var(--s-2); bottom: var(--s-2); width: 2.5px; background: var(--acc);
+  clip-path: polygon(0 0, 100% 1.44px, 100% calc(100% - 1.44px), 0 100%); transform: scaleY(0); transition: transform var(--d) var(--ease); }
+.ml-it[aria-current="page"]::before { transform: none; }
+.ml-lab, .ml-grp, .ml-nom { transition: opacity var(--dh) var(--ease); }
+@media (pointer: coarse) { .ml-in { height: 44px; } }
+/* rail : icônes seules ; largeur = 2 × (marge + retrait) + icône + trait */
+.ml.rail { width: calc(2 * (var(--s-2) + var(--s-3)) + 21px); }
+.ml.rail :is(.ml-lab, .ml-grp, .ml-nom) { opacity: 0; pointer-events: none; }
+.ml.rail .ml-grp { height: 0; padding: var(--s-2) 0 0; }
+@media (min-width: 600px) and (max-width: 839.98px) {
+  .ml:not(.ouvert) { width: calc(2 * (var(--s-2) + var(--s-3)) + 21px); }
+  .ml:not(.ouvert) :is(.ml-lab, .ml-grp, .ml-nom) { opacity: 0; pointer-events: none; }
+  .ml:not(.ouvert) .ml-grp { height: 0; padding: var(--s-2) 0 0; }
+}
+@media (max-width: 599.98px) { .ml:not(.ouvert) { display: none; } } /* téléphone : la barre du bas prend le relais */
+
+.bb { position: sticky; bottom: 0; z-index: var(--z-collant); display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--card); border-top: 1px solid var(--stroke); }
+@media (min-width: 600px) { .bb { display: none; } }
+:where(.bb-it) { all: unset; }
+.bb-it { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 64px; min-width: 0;
+  color: var(--muted); font-size: var(--t-xs); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color var(--dh) var(--ease); }
+.bb-ic { position: relative; display: grid; place-items: center; width: 56px; height: 28px; }
+.bb-ic > svg { width: 22px; height: 22px; fill: currentColor; }
+.bb-lab { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-it:hover, .bb-it[aria-current="page"] { color: var(--text); }
+.bb-it[aria-current="page"] svg { color: var(--link); }
+.bb-it:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -4px; }
+/* onglet ouvert : trait bleu au-dessus (piste A), qui glisse d'un onglet à l'autre (.bb-ind, posé par composants.js) */
+.bb-ind, .bb:not(:has(.bb-ind)) .bb-it[aria-current="page"]::before { content: ''; position: absolute; top: -1px; left: 0; width: 48px; height: 2.5px; background: var(--acc);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.44px) 100%, 1.44px 100%); }
+.bb-ind { transition: transform var(--d) var(--ease); pointer-events: none; }
+.bb:not(:has(.bb-ind)) .bb-it[aria-current="page"]::before { left: calc(50% - 24px); } /* sans le script : le trait, sans glissement */
+/* Onglet « Plus » (1.11.0) : au-delà de 5 sections, la 5e case ouvre une feuille avec les autres, posée AU-DESSUS de la barre,
+   qui reste visible et utilisable (retoucher « Plus » referme, un autre onglet ferme et y va).
+   button.bb-it[data-plus="id-de-la-zone"] + div.bb-zone#id > div.bb-feuille[role="dialog"] > .sheet.cs.acc.cut > .in.cut2 > .grab + h2 + .list > a.liw…
+   La zone couvre l'écran jusqu'au haut de la barre (--bb-h, mesuré par composants.js) et rogne la feuille pendant qu'elle monte. */
+.bb-zone { position: fixed; z-index: var(--z-voile); top: 0; left: 0; right: 0; bottom: var(--bb-h, 64px); overflow: clip; pointer-events: none; } /* clip : jamais défilée par un focus */
+.bb-zone > .scrim { position: absolute; }
+.bb-feuille { position: absolute; z-index: var(--z-surface); left: var(--s-2); right: var(--s-2); bottom: var(--s-2); max-height: calc(100% - var(--s-12)); display: flex; flex-direction: column;
+  transform: translateY(calc(100% + var(--s-2))); visibility: hidden; transition: transform var(--dp) var(--ease), visibility 0s var(--dp); }
+.bb-feuille > .sheet { min-height: 0; display: flex; flex-direction: column; } .bb-feuille > .sheet > .in { flex: 1; min-height: 0; height: auto; overflow-y: auto; box-sizing: border-box; } /* trop de sections : la liste défile dans la feuille */
+.bb-feuille h2 { margin: 0 0 var(--s-3); font: 600 var(--t-base)/1.2 'Déclic', 'Saira', sans-serif; }
+.bb-zone.open .bb-feuille { transform: none; visibility: visible; pointer-events: auto; transition: transform var(--dp) var(--ease); }
+.bb-feuille .liw svg { width: 20px; height: 20px; flex: none; fill: currentColor; color: var(--muted); }
+.bb-feuille .liw[aria-current="page"] > .li { background: var(--selBd); } .bb-feuille .liw[aria-current="page"] > .li > .in { --f: var(--selBg); }
+.bb-feuille .liw[aria-current="page"] svg { color: var(--link); }
+@media (min-width: 600px) { .bb-zone { display: none; } }
+
+/* ── Pastille de compteur (05/11/2026, 1.10.0, specs/navigation.md) ─────────────────
+   span.pas.cut dans un parent en position: relative (bouton-icône, onglet) : nombre de nouveautés, 99+ au-delà.
+   Le nombre est aussi dans l'aria-label du parent (« Alertes, 3 nouvelles ») : la pastille, elle, est aria-hidden. */
+.pas { --c: 2px; position: absolute; z-index: var(--z-viseur); top: 2px; right: 2px; box-sizing: border-box; display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px;
+  background: var(--pri); color: #fff; font: 600 11px/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; pointer-events: none; }
+.bb-ic > .pas { top: -1px; right: var(--s-1); } /* assez à droite pour laisser voir l'icône (les trois points de « Plus ») */
+
+/* ── Curseur (05/11/2026, 1.12.0, specs/curseur.md) ────────────────────────────────
+   Le curseur du navigateur, habillé (piste A) : rail fin, partie choisie en bleu plein, pouce hexagone.
+   .field.curseur[data-curseur][data-unite="km"] > .cur-tete (label.lbl + output.cur-val) + .cur (span.cur-rail + input[type=range], un ou deux)
+   + .cur-bornes (deux span). Deux input = une plage (role="group" sur .cur, aria-label Minimum / Maximum sur les input).
+   composants.js : partie bleue (--p0, --p1), valeur affichée et lue (aria-valuetext), les pouces ne se croisent pas. */
+.cur-tete { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-2); margin-bottom: var(--s-1); }
+.cur-tete .lbl { margin: 0; }
+.cur-val { font-size: var(--t-sm); font-weight: 500; color: var(--link); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cur { --p0: 0%; --p1: 0%; position: relative; height: 32px; }
+@media (pointer: coarse) { .cur { height: 44px; } }
+.cur-rail { position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); pointer-events: none;
+  background: linear-gradient(90deg, var(--borderHi) var(--p0), var(--pri) var(--p0), var(--pri) var(--p1), var(--borderHi) var(--p1)); }
+.cur input { -webkit-appearance: none; appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: none; outline: none; pointer-events: none; }
+.cur input::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 19.05px; background: var(--pri); cursor: grab; pointer-events: auto;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); transition: background var(--dh) var(--ease); }
+.cur input::-moz-range-thumb { width: 22px; height: 19.05px; border: 0; border-radius: 0; background: var(--pri); cursor: grab; pointer-events: auto;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.cur input:hover::-webkit-slider-thumb, .cur input:focus-visible::-webkit-slider-thumb { background: var(--priH); }
+.cur input:hover::-moz-range-thumb, .cur input:focus-visible::-moz-range-thumb { background: var(--priH); }
+.cur input:active::-webkit-slider-thumb { cursor: grabbing; }
+.cur:has(input:focus-visible) { outline: 1.5px solid var(--focus); outline-offset: var(--s-1); }
+.cur-bornes { display: flex; justify-content: space-between; margin-top: var(--s-1); font-size: var(--t-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.field.dis .cur-rail { background: var(--borderHi); } .field.dis .cur input::-webkit-slider-thumb { background: var(--muted); }
+
+/* ── Champ numérique (05/11/2026, 1.12.0, specs/champ-numerique.md) ────────────────
+   Le champ de la charte, − et + à l'intérieur à droite (piste A), l'unité devant eux.
+   .field.nombre > label.lbl + .fw.top.vfw > .cs.acc.cut > .in.cut2 > input[type=number][data-nombre][min][max][step][data-unite]
+   + span.unite + button.bw.ibtn.nb-moins + button.bw.ibtn.nb-plus (tabindex="-1" : au clavier, les flèches dans le champ) ; + p.help.
+   composants.js : pas, appui long qui défile, bornes (valeur ramenée, mot dans l'aide), boutons éteints à la borne. */
+.nombre input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.nombre input::-webkit-outer-spin-button, .nombre input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.nombre .unite { flex: none; padding-right: var(--s-2); color: var(--muted); font-size: var(--t-sm); white-space: nowrap; }
+.nombre .ibtn { --bh: 32px; flex: none; }
+.nombre .nb-plus { margin-right: var(--s-1); }
+.field.nombre.lim .help { color: var(--md); }
+
+/* ── Boutons groupés (05/11/2026, 1.12.0, specs/boutons-groupes.md) ────────────────
+   Une option parmi 2 à 5, toutes visibles (piste C) : rail --card2, l'option choisie est un bloc coupé plus clair qui glisse.
+   .seg-w.cs.cut > .in.cut2.seg[role="radiogroup"][aria-labelledby] > span.seg-bloc.cut + button[role="radio"][aria-checked][data-valeur] (icône facultative)
+   composants.js : clic, flèches, Début, Fin (un seul arrêt de Tab), le bloc qui glisse, événement « choix » (detail.valeur).
+   .seg[data-seg-externe] : la sélection reste à l'app (React), le script ne fait que glisser le bloc. */
+.seg-w { --c: var(--c-btn); display: inline-block; max-width: 100%; vertical-align: middle; }
+.seg { --f: var(--card2); position: relative; display: flex; padding: 3px; overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg > button { all: unset; position: relative; z-index: var(--z-dessus); box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  height: 30px; padding: 0 var(--s-4); font-size: var(--t-sm); font-weight: 500; color: var(--muted); white-space: nowrap; cursor: pointer; transition: color var(--dh) var(--ease); }
+.seg > button:hover, .seg > button[aria-checked="true"] { color: var(--text); }
+.seg > button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; }
+.seg > button > svg { width: 16px; height: 16px; flex: none; fill: currentColor; }
+@media (pointer: coarse) { .seg > button { height: 38px; } }
+.seg-bloc { --c: var(--c-btn); position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; background: var(--secBg); pointer-events: none;
+  transition: transform var(--d) var(--ease), width var(--d) var(--ease); }
+/* sans le script : le fond sous l'option choisie, sans glissement */
+.seg:not(.seg-pret) > button[aria-checked="true"] { background: var(--secBg); }
+
+/* ── Liste avec recherche, sélection multiple (05/11/2026, 1.13.0, specs/liste-recherche.md, specs/selection-multiple.md) ──
+   Un <select> reste la source de la valeur ; composants.js pose dessus un champ où l'on tape (select[data-recherche]) ou un bouton
+   qui résume (select[multiple][data-multi]). La liste reprend .dd-pop du menu déroulant, rendue au niveau de la page.
+   Liste avec recherche (piste C) : vide, les récents (data-recents) puis les groupes (<optgroup>) ; data-ajout : « Ajouter « … » ».
+   Sélection multiple (piste C) : cases dans la liste, recherche en tête, « Terminé » au pied, étiquettes .etq sous le champ. */
+.rech-ico { display: inline-flex; flex: none; margin-left: var(--s-3); color: var(--muted); }
+.rech-ico svg { width: 16px; height: 16px; fill: currentColor; }
+.fw input.rech { padding-left: var(--s-2); }
+.rech-chev { all: unset; flex: none; align-self: stretch; width: 36px; display: grid; place-items: center; cursor: pointer; }
+.rech-chev i { width: 10px; height: 6px; background: var(--muted); clip-path: polygon(0 0, 100% 0, 50% 100%); transition: transform var(--d) var(--ease); }
+.rech-f[data-open="true"] .rech-chev i, .multi-f[data-open="true"] .chev { transform: rotate(180deg); }
+.multi-f .chev { transition: transform var(--d) var(--ease); }
+.multi-btn { all: unset; box-sizing: border-box; flex: 1; min-width: 0; display: flex; align-items: center; height: var(--fh); padding: 0 36px 0 var(--s-3); font-size: var(--t-base); color: var(--text); cursor: pointer; }
+.fw.top .multi-btn { height: var(--fh-top); }
+.dd-opt mark { background: none; color: var(--link); font-weight: 600; }
+.dd-opt > .in > svg { width: 16px; height: 16px; flex: none; fill: currentColor; color: var(--muted); }
+.dd-grp { padding: var(--s-2) var(--s-3) var(--s-1); font-size: var(--t-xs); color: var(--muted); list-style: none; }
+.dd-vide { padding: var(--s-3); font-size: var(--t-sm); color: var(--muted); list-style: none; }
+.pop-cherche { padding: var(--s-1) var(--s-1) var(--s-2); }
+.pop-cherche .fw input.rech { height: 38px; padding-top: 0; }
+@media (pointer: coarse) { .pop-cherche .fw input.rech { height: 44px; } }
+.pop-pied { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); margin-top: var(--s-1); padding: var(--s-2) var(--s-2) 0; border-top: 1px solid var(--stroke); font-size: var(--t-xs); color: var(--muted); }
+.pop-fini { all: unset; cursor: pointer; color: var(--link); font-size: var(--t-sm); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.pop-fini:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+@media (pointer: coarse) { .pop-fini { min-height: 44px; display: inline-flex; align-items: center; } }
+/* choix multiple : la case de la charte (.box) dans la ligne, pas de fond « choisi » (c'est la case qui le dit) */
+.dd-opt .box { width: 18px; height: 18px; flex: none; }
+.dd-ul[aria-multiselectable="true"] .dd-opt[aria-selected="true"] { background: transparent; }
+.dd-ul[aria-multiselectable="true"] .dd-opt[aria-selected="true"] > .in { --f: transparent; }
+.dd-ul[aria-multiselectable="true"] .dd-opt.act > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
+.dd-opt[aria-selected="true"] .box, .dd-opt[aria-selected="true"] .box > i { background: var(--pri); }
+.dd-opt[aria-selected="true"] .box > i::after { transform: none; }
+/* étiquette : valeur choisie, avec sa croix ; .etqs les aligne */
+.etqs { display: flex; flex-wrap: wrap; gap: var(--s-1); margin-top: var(--s-2); }
+.etqs:empty { display: none; }
+.etq { --c: var(--c-badge); display: inline-flex; align-items: center; gap: 2px; height: 28px; padding-left: var(--s-2); font-size: var(--t-sm); background: var(--badgeBg); color: var(--badgeTx); white-space: nowrap; }
+.etq button { all: unset; width: 24px; height: 28px; display: grid; place-items: center; cursor: pointer; opacity: .8; }
+.etq button:hover { opacity: 1; }
+.etq button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -3px; }
+.etq button i { width: 9px; height: 9px; background: currentColor; clip-path: polygon(15% 0, 50% 35%, 85% 0, 100% 15%, 65% 50%, 100% 85%, 85% 100%, 50% 65%, 15% 100%, 0 85%, 35% 50%, 0 15%); }
+@media (pointer: coarse) { .etq { height: 36px; } .etq button { width: 36px; height: 36px; } }
+
+/* ── Dépôt de fichier (05/11/2026, 1.13.0, specs/depot-fichier.md) ─────────────────
+   Piste A : zone en tireté (la coupe native .coupe.tir, comme l'état vide), qui s'éclaire quand un fichier passe dessus.
+   div.depot.coupe.tir[data-depot] > svg (importer) + texte + petite ligne des limites + input[type=file] ; liste .fichiers après.
+   Ligne : .fic.cs.cut > .in.cut2 > svg + .fic-nom + bouton Retirer + .fic-etat (+ .pg pendant l'envoi) ; .ok, .err. */
+.depot { --c: var(--c-card); --trait: var(--edgeStrong); display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-6) var(--s-4); text-align: center; cursor: pointer;
+  transition: background var(--dh) var(--ease), border-color var(--dh) var(--ease); }
+.depot > svg { width: 28px; height: 28px; fill: currentColor; color: var(--link); }
+.depot b { font-weight: 600; }
+.depot .lien-d { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+.depot .lim-d { font-size: var(--t-xs); color: var(--muted); }
+.depot:hover, .depot.survol { --f: color-mix(in oklab, var(--card), var(--pri) 12%); --trait: var(--acc); }
+.depot:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 3px; }
+.field.err .depot { --trait: var(--hi); }
+.fichiers { display: grid; gap: var(--s-2); margin-top: var(--s-2); }
+.fichiers:empty { display: none; }
+.fic { --c: var(--c-row); }
+.fic > .in { --f: var(--card2); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px var(--s-3); align-items: center; padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3); }
+.fic > .in > svg { width: 16px; height: 16px; fill: currentColor; color: var(--muted); }
+.fic-nom { grid-column: 2; min-width: 0; font-size: var(--t-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fic > .in > .bw { grid-column: 3; grid-row: 1; } /* places fixes : la ligne tient aussi sans icône */
+.fic .ibtn { --bh: 32px; }
+.fic-etat { grid-column: 2 / -1; font-size: var(--t-xs); color: var(--muted); }
+.fic .pg { grid-column: 1 / -1; margin-top: var(--s-1); }
+.fic.ok .fic-etat { color: color-mix(in oklab, var(--lo), var(--text) 30%); }
+.fic.err { background: var(--hi); }
+.fic.err .fic-etat { color: color-mix(in oklab, var(--hi), var(--text) 30%); }
+
+/* ── Bannière dans la page (06/11/2026, 1.14.0, specs/banniere.md) ─────────────────
+   Un message qui reste tant qu'il est vrai (la notification, elle, passe). Piste E : fond neutre, contour dans la couleur
+   mêlée au trait de la charte, rappel de coupe en couleur pleine.
+   div.ban.cs.acc.cut[.lo|.md|.hi][role=status|alert] > .in.cut2 > svg + div (b + texte + .ban-act > liens) + button.bw.ibtn.ban-x
+   Sans classe de couleur : info (bleu). composants.js : la croix ferme la bannière (événement « ferme »). */
+.ban { --k: var(--acc); --c: var(--c-row); background: color-mix(in oklab, var(--k) 45%, var(--stroke)); }
+.ban.lo { --k: var(--lo); } .ban.md { --k: var(--md); } .ban.hi { --k: var(--hi); }
+.ban.cs.acc::before, .ban.cs.acc::after { background: var(--k); }
+.ban > .in { --f: var(--card); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s-1) var(--s-3); align-items: start; padding: var(--s-3); font-size: var(--t-sm); line-height: 1.5; }
+.ban > .in > svg { width: 18px; height: 18px; margin-top: 1px; fill: currentColor; color: var(--k); }
+.ban b { font-weight: 600; }
+.ban-act { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); margin-top: var(--s-1); }
+.ban-act :is(a, button) { all: unset; cursor: pointer; color: var(--link); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.ban-act :is(a, button):focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+@media (pointer: coarse) { .ban-act :is(a, button) { min-height: 44px; display: inline-flex; align-items: center; } }
+.ban-x { --bh: 28px; margin: calc(var(--s-1) * -1) calc(var(--s-1) * -1) 0 0; }
+.ban[hidden] { display: none; }
+
+/* ── Confirmation d'une action destructive (06/11/2026, 1.14.0, specs/confirmation.md) ──
+   DeclicUI.confirmer({ titre, texte, oui, non }) → Promise<boolean> (composants.js) : la fenêtre de la charte (.modal),
+   role="alertdialog", voile, page inert, focus sur « Annuler », Échap = non. Le bouton rose nomme ce qui disparaît. */
+.confirm-l { position: fixed; inset: 0; z-index: var(--z-surface); display: grid; place-items: center; padding: var(--s-4); pointer-events: none; }
+.confirm-l[hidden] { display: none; }
+.confirm-l > .modal { width: min(440px, 100%); pointer-events: auto; }
+.confirm-l h2 { margin: 0 0 var(--s-2); font: 600 var(--t-lg)/1.25 'Déclic', 'Saira', sans-serif; }
+.confirm-l p { margin: 0; color: var(--muted); font-size: var(--t-sm); line-height: 1.6; }
+.confirm-b { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s-2); margin-top: var(--s-5); }
+
+/* ── Annulation après coup (06/11/2026, 1.14.0, specs/annulation.md) ───────────────
+   DeclicUI.annulable({ texte, annuler, duree }) (composants.js) : notification en bas, « Annuler », un fil bleu qui se vide
+   (piste B), en pause au survol et au focus. Pour ce qui se défait (archiver) ; ce qui ne se défait pas passe par confirmer(). */
+.toasts { position: fixed; left: 0; right: 0; bottom: max(var(--s-4), env(safe-area-inset-bottom, 0px)); z-index: var(--z-toast); display: grid; justify-items: center; gap: var(--s-2); padding: 0 var(--s-4); pointer-events: none; }
+.toast-a { --c: var(--c-btn); width: min(460px, 100%); pointer-events: auto; }
+.toast-a > .in { --f: var(--card2); position: relative; display: flex; align-items: center; gap: var(--s-3); min-height: 48px; box-sizing: border-box; padding: var(--s-2) var(--s-2) var(--s-2) var(--s-4); font-size: var(--t-sm); overflow: hidden; }
+.toast-a .toast-t { flex: 1; min-width: 0; }
+.toast-a .bw { --bh: 32px; flex: none; }
+.toast-temps { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--acc); transform-origin: left; animation: toast-vide var(--duree, 6s) linear forwards; }
+.toast-a:is(:hover, :focus-within) .toast-temps { animation-play-state: paused; }
+@keyframes toast-vide { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast-temps { display: none; } }
+
+/* ── Accordéon (06/11/2026, 1.15.0, specs/accordeon.md) ────────────────────────────
+   Un bloc par section (piste B) ; ouverte, trait marqué et rappel de coupe (comme la liste riche) ; devant, l'hexagone + / −
+   de la piste C (choix de Julien). .accord[data-accordeon] [data-un-seul] > .accord-i.cs.acc.cut[.ouv] > .in.cut2 >
+   h3 > button.accord-b[aria-expanded][aria-controls] (span.accord-h > i + i, span.accord-t) + div.accord-p#id > div > contenu */
+.accord { display: grid; gap: var(--s-2); align-content: start; }
+.accord-i { --c: var(--c-row); }
+.accord-i > .in { --f: var(--card2); }
+.accord-i:not(.ouv)::before, .accord-i:not(.ouv)::after { display: none; }
+.accord-i.ouv { background: var(--edgeStrong); }
+.accord-i h2, .accord-i h3, .accord-i h4 { margin: 0; font: inherit; }
+.accord-b { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: var(--s-3); min-height: 48px; padding: var(--s-2) var(--s-3); cursor: pointer; font-size: var(--t-base); font-weight: 500; }
+.accord-b:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; }
+.accord-t { flex: 1; min-width: 0; }
+.accord-h { position: relative; flex: none; display: grid; place-items: center; width: 22px; height: 19.05px; background: var(--edgeStrong); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); transition: background var(--d) var(--ease); }
+.accord-h::before { content: ''; position: absolute; inset: 1.2px; background: var(--card2); clip-path: inherit; }
+.accord-h i { position: absolute; width: 9px; height: 1.5px; background: var(--link); }
+.accord-h i + i { transform: rotate(90deg); transition: transform var(--d) var(--ease); }
+.ouv > .in .accord-h { background: var(--acc); }
+.ouv > .in .accord-h i + i { transform: none; }
+.accord-p { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dp) var(--ease); }
+.accord-p > div { overflow: hidden; }
+.accord-p > div > * { margin-left: calc(var(--s-3) * 2 + 22px); padding: 0 var(--s-3) var(--s-4) 0; } /* marge, pas padding : un tableau qui défile garde sa 1re colonne au bord (1.20.0) */
+.accord-p > div > p { margin-block: 0; font-size: var(--t-sm); color: var(--muted); line-height: 1.6; }
+.accord-i.ouv .accord-p { grid-template-rows: 1fr; }
+@media (pointer: coarse) { .accord-b { min-height: 52px; } }
+
+/* ── Avatar (06/11/2026, 1.15.0, specs/avatar.md) ──────────────────────────────────
+   Piste C : carré coupé, fond neutre, liseré et initiales dans la couleur de la personne (--k = une des --g1…--g7, toujours
+   la même pour le même nom : DeclicUI.couleurPersonne(nom)). Aucun rond.
+   span.av[.s 28 | (40) | .l 56][style="--k: var(--g3)"][role=img][aria-label] > span.av-ini (ou img) + span.av-st (en ligne)
+   Groupe : .avs[role=group][aria-label] > .av… + span.av.av-plus (« +2 »). */
+.av { --t: 40px; --k: var(--g1); --c: calc(var(--t) * .16); position: relative; flex: none; display: inline-grid; place-items: center; width: var(--t); height: var(--t);
+  font: 600 calc(var(--t) * .36)/1 'Saira', sans-serif; font-stretch: 110%; color: var(--k); vertical-align: middle; }
+.av.s { --t: 28px; } .av.l { --t: 56px; }
+.av::before, .av::after { content: ''; position: absolute; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.av::before { inset: 0; background: var(--k); }
+.av::after { inset: 1.5px; background: var(--card2); }
+.av > img { position: absolute; z-index: var(--z-dessus); inset: 1.5px; width: calc(100% - 3px); height: calc(100% - 3px); object-fit: cover;
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.av-ini { position: relative; z-index: var(--z-dessus); }
+.av-st { position: absolute; z-index: var(--z-viseur); right: -3px; bottom: -3px; width: 12px; height: 10.4px; background: var(--lo); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.av.s .av-st { width: 9px; height: 7.8px; right: -2px; bottom: -2px; }
+.avs { display: inline-flex; align-items: center; }
+.avs > .av + .av { margin-left: calc(var(--t) * -.22); }
+.avs > .av { filter: drop-shadow(2px 0 0 var(--f, var(--card))) drop-shadow(-2px 0 0 var(--f, var(--card))); }
+.av-plus { --k: var(--borderHi); color: var(--muted); font-size: var(--t-xs); }
+
+/* ── Liste clé-valeur (06/11/2026, 1.15.0, specs/cle-valeur.md) ────────────────────
+   Piste B : une petite case par paire, clé au-dessus, rangées en grille. dl.kv > div.cs.cut > .in.cut2 > dt + dd */
+.kv { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s-2); }
+.kv > div { --c: var(--c-row); }
+.kv > div > .in { --f: var(--card2); display: grid; gap: 2px; align-content: start; padding: var(--s-2) var(--s-3); }
+.kv dt { font-size: var(--t-xs); color: var(--muted); }
+.kv dd { margin: 0; font-size: var(--t-sm); overflow-wrap: anywhere; }
+.kv > .large { grid-column: 1 / -1; } /* une valeur longue (adresse, description) prend toute la ligne */
+
+/* ── Séparateur (06/11/2026, 1.15.0, specs/separateur.md) ──────────────────────────
+   Piste C : le trait s'efface vers les bords, petit hexagone bleu au centre ; avec un libellé, un hexagone de chaque côté.
+   div.separ[role=separator] > i  |  div.separ[role=separator] > i + span + i */
+.separ { display: flex; align-items: center; gap: var(--s-3); margin: var(--s-3) 0; font-size: var(--t-xs); color: var(--muted); }
+.separ::before, .separ::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--edgeStrong)); }
+.separ::after { background: linear-gradient(90deg, var(--edgeStrong), transparent); }
+.separ > i { flex: none; width: 9px; height: 7.8px; background: var(--acc); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.separ > span { white-space: nowrap; }
+
+/* ── Touche clavier (06/11/2026, 1.15.0, specs/touche.md) ──────────────────────────
+   Piste B : contour fin de la charte, fond de carte. kbd.kb.cut > span.cut2 ; « + » entre deux touches : span.kb-plus */
+.kb { --c: 2.7px; display: inline-flex; vertical-align: .05em; height: 1.65em; min-width: 1.65em; padding: 1px; box-sizing: border-box; background: var(--stroke); font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; white-space: nowrap; }
+.kb > span { flex: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0 .45em; background: var(--card); color: var(--text); }
+.kb-plus { margin: 0 2px; font-size: var(--t-xs); color: var(--muted); }
+
+/* ── Pagination (06/11/2026, 1.16.0, specs/pagination.md) ──────────────────────────
+   Piste B : flèches, choix de la page au milieu (« Page [5] sur 30 »), en dessous le rang affiché et les lignes par page.
+   Les deux choix sont le menu déroulant de la charte (select[data-menu] ; select natif au toucher).
+   nav.pagi[aria-label="Pagination"][data-pagination][data-total][data-par][data-pars="10,25,50"][data-page] : composants.js
+   construit .pagi-nav (button.bw.vfw.ibtn ‹ + .pagi-mil (.field > label.lbl + .fw.top.vfw … select) + « sur N » + ›)
+   et .pagi-pied (output + .field lignes par page). React : Pagination. */
+.pagi { display: grid; gap: var(--s-2); font-size: var(--t-sm); }
+.pagi-nav { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.pagi-mil { display: flex; align-items: center; gap: var(--s-2); min-width: 0; font-variant-numeric: tabular-nums; }
+.pagi-mil > span { white-space: nowrap; }
+.pagi .field { display: flex; align-items: center; gap: var(--s-2); margin: 0; }
+.pagi .lbl { margin: 0; font-weight: 400; white-space: nowrap; }
+.pagi .fw { --fh-top: 36px; min-width: 76px; }
+.pagi .fw select, .pagi .dd-btn { font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.pagi-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2); font-size: var(--t-xs); color: var(--muted); }
+.pagi-pied output { font-variant-numeric: tabular-nums; }
+.pagi-pied .lbl { color: var(--muted); }
+@media (pointer: coarse) { .pagi .fw { --fh-top: 44px; } }
+
+/* ── Étapes (06/11/2026, 1.16.0, specs/etapes.md) ───────────────────────────────────
+   Piste C : liste verticale, le contenu s'ouvre sous l'étape en cours. Hexagone numéroté : à venir gris, en cours contour bleu,
+   faite pleine avec la coche. Revenir sur une étape faite n'efface pas les suivantes (remarque de Julien) : l'étape ouverte
+   et les étapes validées sont deux états séparés ; sur une étape déjà validée, le bouton principal devient « Reprendre à l'étape N ».
+   ol.etapes[data-etapes][data-fin="Envoyer"] > li.etape[.fait][.ici][aria-current="step"] > span.etape-hx > span
+   + h3.etape-h > (span | button).etape-t + span.etape-d + div.etape-c (contenu, puis .etape-nav posé par composants.js). React : Etapes. */
+.etapes { list-style: none; margin: 0; padding: 0; display: grid; }
+.etape { position: relative; display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: var(--s-3); padding-bottom: var(--s-4); }
+.etape:not(:last-child)::before { content: ''; position: absolute; left: 14px; top: 30px; bottom: 4px; width: 2px; background: var(--border); }
+.etape.fait:not(:last-child)::before { background: var(--acc); }
+.etape-hx { position: relative; width: 30px; height: 26px; display: grid; place-items: center; background: var(--border); color: var(--muted);
+  font-size: var(--t-xs); font-weight: 600; font-variant-numeric: tabular-nums; clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.etape-hx::before { content: ''; position: absolute; inset: 1.5px; background: var(--card); clip-path: inherit; }
+.etape-hx > * { position: relative; }
+.etape-hx .ic { width: 14px; height: 14px; }
+.etape.fait .etape-hx, .etape.fait .etape-hx::before { background: var(--acc); color: #fff; }
+.etape.ici .etape-hx { background: var(--acc); color: var(--link); }
+.etape.ici .etape-hx::before { background: var(--card); }
+.etape-h { align-self: center; margin: 0; font: inherit; } /* le titre (h2, h3…) n'est qu'une enveloppe : la forme est sur .etape-t */
+.etape-t { font: 400 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: 110%; color: var(--muted); }
+.etape.ici .etape-t, .etape.fait .etape-t { font-weight: 500; color: var(--text); }
+button.etape-t { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 26px; cursor: pointer; font: 500 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: 110%; }
+button.etape-t:hover { color: var(--link); }
+button.etape-t:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
+.etape-d { grid-column: 2; font-size: var(--t-xs); color: var(--muted); }
+.etape-c { grid-column: 2; min-width: 0; display: grid; gap: var(--s-3); margin-top: var(--s-2); }
+.etape:not(.ici) > .etape-c { display: none; }
+.etape-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
+@media (pointer: coarse) { button.etape-t { min-height: 44px; } }
+
+/* ── Lien « aller au contenu » (06/11/2026, 1.16.0, specs/aller-au-contenu.md) ─────────
+   Piste D (choix de Julien) : l'allure de A (bouton principal), le comportement de C : premier élément de la barre du haut,
+   fermé (colonne à 0, invisible) ; au premier Tab, il s'ouvre devant le logo et pousse le reste ; le viseur le cadre.
+   Jamais visible à la souris ni au doigt. header.bh > span.saut-z > span > a.saut.bw.vfw[href="#contenu"] > span.b.pri.cut >
+   span.cut2 + viseur ; la cible : main#contenu (composants.js lui donne tabindex="-1" et le focus). Sans barre du haut : span.saut-z.seul (en haut à gauche, par-dessus). */
+.saut-z { display: grid; grid-template-columns: 0fr; flex: none; opacity: 0; margin-right: calc(var(--s-2) * -1);
+  transition: grid-template-columns var(--d) var(--ease), opacity var(--dh) var(--ease), margin var(--d) var(--ease); }
+.saut-z > span { min-width: 0; overflow: clip; overflow-clip-margin: 8px; } /* la marge laisse passer le viseur */
+.saut-z:focus-within { grid-template-columns: 1fr; opacity: 1; margin-right: 0; }
+.saut { white-space: nowrap; text-decoration: none; }
+.saut .b { --bh: 36px; }
+.saut-z.seul { position: fixed; z-index: var(--z-toast); top: var(--s-2); left: var(--s-2); margin: 0; }
+.saut-z.seul:not(:focus-within) { pointer-events: none; }
+.saut-cible:focus { outline: none; } /* la cible du saut (posée par composants.js) reçoit le focus sans cadre */
+
+/* ── Champ d'heure (06/11/2026, 1.17.0, specs/champ-heure.md) ──────────────────────
+   Piste D, revue par Julien sur le modèle du sélecteur d'Android : on tape l'heure (« 14 h 30 », 1430, 14:30, 14) ou on ouvre
+   le panneau : l'heure en haut, un cadran à 12 faces avec une aiguille (heures 0-11 dehors, 12-23 dedans, puis minutes à la
+   minute près), et dessous deux colonnes qui défilent, synchronisées avec l'aiguille (et faites pour le clavier).
+   .field > label.lbl + .fw.top.vfw > .cs.acc.cut > .in.cut2 > input[data-heure] (+ button.hr-btn posé par composants.js) ;
+   panneau .hr-pan au niveau de la page. */
+.hr-pan { position: fixed; z-index: var(--z-menu); width: 280px; }
+.hr-pan[hidden] { display: none; }
+.hr-pan .pan { --c: var(--c-card); background: var(--edgeStrong); }
+.hr-pan .pan > .in { --f: var(--card2); padding: var(--s-3); display: grid; gap: var(--s-3); justify-items: center; }
+.hr-lec { display: flex; align-items: center; gap: var(--s-2); font: 600 var(--t-2xl)/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; }
+.hr-lec > span { color: var(--muted); font-size: var(--t-lg); }
+:where(.hr-lec button) { all: unset; }
+.hr-lec button { --c: var(--c-row); box-sizing: border-box; min-width: 64px; padding: var(--s-1) var(--s-2); text-align: center; cursor: pointer; color: var(--muted); clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.hr-lec button[aria-pressed="true"] { color: var(--link); background: var(--selBg); }
+.hr-lec button:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.hr-cad { width: 240px; height: 240px; display: block; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.hr-face { fill: var(--card); stroke: var(--edgeStrong); stroke-width: 1; }
+.hr-grad { stroke: var(--borderHi); stroke-width: 1; }
+.hr-lb { font: 500 13px 'Saira', sans-serif; font-stretch: 110%; fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.hr-lb.in { font-size: 11px; fill: var(--muted); }
+.hr-lb.sur { fill: #fff; font-weight: 600; }
+.hr-aig { stroke: var(--acc); stroke-width: 2; }
+.hr-cur, .hr-cen { fill: var(--acc); }
+.hr-pt { fill: #fff; }
+.hr-roues { position: relative; display: flex; gap: var(--s-2); }
+.hr-roues::before { content: ''; position: absolute; left: 0; right: 0; top: 36px; height: 36px; --c: var(--c-row); background: var(--pri); pointer-events: none; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.hr-roues > span { position: relative; align-self: center; color: #fff; opacity: .7; }
+.hr-roue { position: relative; width: 64px; height: 108px; padding: 36px 0; box-sizing: border-box; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; outline: none; }
+.hr-roue::-webkit-scrollbar { display: none; }
+.hr-roue:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+:where(.hr-roue button) { all: unset; }
+.hr-roue button { display: grid; place-items: center; width: 100%; height: 36px; scroll-snap-align: center; font-variant-numeric: tabular-nums; color: var(--muted); cursor: pointer; }
+.hr-roue button[aria-selected="true"] { color: #fff; font-weight: 600; }
+.hr-pied { display: flex; justify-content: flex-end; gap: var(--s-2); width: 100%; }
+
+/* ── Code à usage unique (06/11/2026, 1.17.0, specs/code-unique.md) ─────────────────
+   Piste A : une case par chiffre, on avance seul, Retour arrière recule, un code collé remplit tout ; case remplie = trait bleu.
+   L'input d'origine (input[data-code][maxlength="6"]) garde la valeur pour le formulaire ; composants.js pose les cases.
+   .field > label.lbl + .code > span.code-c.cut > input.cut2 (×n) ; erreur : .field.err (cases en --hi) et .help. */
+.code { display: flex; gap: var(--s-2); }
+.code-c { --c: var(--c-inp); flex: 1; max-width: 48px; padding: 1px; background: var(--edgeStrong); transition: background var(--dh) var(--ease); }
+.code-c.plein { background: var(--acc); }
+.code-c:focus-within { background: var(--focus); }
+.field.err .code-c { background: var(--hi); }
+:where(.code-c > input) { all: unset; }
+.code-c > input { box-sizing: border-box; display: block; width: 100%; height: 52px; background: var(--card); text-align: center; font: 500 var(--t-xl)/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; color: var(--text); caret-color: var(--link); }
+input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ── Chronologie (06/11/2026, 1.17.0, specs/chronologie.md) ──────────────────────────
+   Piste A (date à gauche, rail au milieu, texte à droite) avec les icônes de la piste C dans l'hexagone (choix de Julien).
+   ol.chrono > li > time.chrono-q + span.chrono-hx[.acc | .lo | .hi | .md] > svg.ic + div > span.chrono-t + span.chrono-d */
+.chrono { list-style: none; margin: 0; padding: 0; display: grid; }
+.chrono > li { position: relative; display: grid; grid-template-columns: 64px 26px minmax(0, 1fr); column-gap: var(--s-3); padding-bottom: var(--s-4); }
+.chrono > li:not(:last-child)::before { content: ''; position: absolute; left: calc(64px + var(--s-3) + 12px); top: 23px; bottom: 0; width: 2px; background: var(--borderHi); }
+.chrono-q { padding-top: 3px; text-align: right; font-size: var(--t-xs); line-height: 1.35; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chrono-hx { position: relative; width: 26px; height: 22.5px; display: grid; place-items: center; background: var(--edgeStrong); color: var(--muted); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.chrono-hx::before { content: ''; position: absolute; inset: 1.5px; background: var(--card); clip-path: inherit; }
+.chrono-hx > .ic { position: relative; width: 12px; height: 12px; }
+.chrono-hx.acc, .chrono-hx.acc::before { background: var(--acc); color: #fff; }
+.chrono-hx.lo { background: var(--lo); color: var(--lo); } .chrono-hx.md { background: var(--md); color: var(--md); } .chrono-hx.hi { background: var(--hi); color: var(--hi); }
+.chrono-t { display: block; font-size: var(--t-sm); font-weight: 500; padding-top: 2px; }
+.chrono-d { display: block; font-size: var(--t-xs); color: var(--muted); }
+@media (max-width: 599.98px) { .chrono > li { grid-template-columns: 52px 26px minmax(0, 1fr); column-gap: var(--s-2); } .chrono > li:not(:last-child)::before { left: calc(52px + var(--s-2) + 12px); } }
+
+/* ── Arborescence (06/11/2026, 1.17.0, specs/arborescence.md) ─────────────────────────
+   Piste B : traits fins de guidage par niveau, hexagone + / − de l'accordéon pour ouvrir et fermer. Option data-cases (piste C) :
+   cases à cocher à trois états pour choisir plusieurs éléments (cocher un dossier coche son contenu).
+   ul.arbre[role=tree][data-arbre][data-cases] > li[role=treeitem][aria-expanded] > div.arbre-r > (span.arbre-pm, span.arbre-cc posés
+   par composants.js) + svg.ic + span.arbre-l + span.arbre-nb ; ul[role=group] > li… */
+.arbre, .arbre ul { list-style: none; margin: 0; padding: 0; }
+.arbre [role="treeitem"] { outline: none; }
+.arbre-r { position: relative; display: flex; align-items: center; gap: var(--s-2); min-height: 34px; padding: 0 var(--s-2) 0 calc(var(--n, 0) * 20px + 4px); font-size: var(--t-sm); cursor: pointer; }
+.arbre-r::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: calc(var(--n, 0) * 20px); background: repeating-linear-gradient(90deg, transparent 0 10px, var(--stroke) 10px 11px, transparent 11px 20px); }
+.arbre-r:hover { background: linear-gradient(90deg, transparent calc(var(--n, 0) * 20px), var(--card2) calc(var(--n, 0) * 20px)); }
+.arbre-r > .ic { color: var(--muted); }
+.arbre-l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arbre-nb { margin-left: auto; font-size: var(--t-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.arbre [aria-expanded="false"] > ul { display: none; }
+.arbre [aria-selected="true"] > .arbre-r { color: var(--link); font-weight: 500; background: linear-gradient(90deg, transparent calc(var(--n, 0) * 20px), var(--selBg) calc(var(--n, 0) * 20px)); }
+.arbre [role="treeitem"]:focus-visible > .arbre-r { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.arbre-pm { position: relative; flex: none; width: 16px; height: 14px; display: grid; place-items: center; background: var(--edgeStrong); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); transition: background var(--d) var(--ease); }
+.arbre-pm::before { content: ''; position: absolute; inset: 1px; background: var(--card); clip-path: inherit; }
+.arbre-pm i { position: absolute; width: 7px; height: 1.5px; background: var(--link); }
+.arbre-pm i + i { transform: rotate(90deg); transition: transform var(--d) var(--ease); }
+[aria-expanded="true"] > .arbre-r .arbre-pm { background: var(--acc); }
+[aria-expanded="true"] > .arbre-r .arbre-pm i + i { transform: none; }
+.arbre li:not([aria-expanded]) > .arbre-r .arbre-pm { visibility: hidden; }
+.arbre-cc { --c: 3px; position: relative; flex: none; width: 16px; height: 16px; background: var(--edgeStrong); clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.arbre-cc::before { content: ''; position: absolute; inset: 1.5px; background: var(--card); clip-path: inherit; }
+[aria-checked="true"] > .arbre-r .arbre-cc, [aria-checked="mixed"] > .arbre-r .arbre-cc, [aria-checked="true"] > .arbre-r .arbre-cc::before, [aria-checked="mixed"] > .arbre-r .arbre-cc::before { background: var(--pri); }
+[aria-checked="true"] > .arbre-r .arbre-cc::after { content: ''; position: absolute; inset: 0; background: #fff; clip-path: polygon(18% 52%, 30% 40%, 43% 53%, 72% 24%, 84% 36%, 43% 77%); }
+[aria-checked="mixed"] > .arbre-r .arbre-cc::after { content: ''; position: absolute; left: 4px; right: 4px; top: 7px; height: 2px; background: #fff; }
+@media (pointer: coarse) { .arbre-r { min-height: 44px; } }
+
+/* ── Vues de calendrier (06/11/2026, 1.18.0, specs/calendrier-vues.md) ───────────────
+   Piste D (choix de Julien) : la grille de A (rendez-vous écrits dans les cases, semaine en grille horaire) et, dessous,
+   la liste du jour choisi de B. div.calv[data-calv] (+ script.calv-donnees en JSON) : composants.js construit .calv-bar,
+   la grille (.calv-mois ou .calv-sem), la liste (.calv-liste) et la légende. Couleur d'une catégorie : --k (--g1…--g7). */
+.calv { display: grid; gap: var(--s-3); min-width: 0; }
+.calv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2); }
+.calv-bar > b { flex: 1 0 100%; order: -1; font-weight: 600; }
+.calv-bar > .calv-esp { flex: 1; }
+:where(.calv-vb) { all: unset; }
+.calv-vb { --c: var(--c-row); box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 var(--s-3); font-size: var(--t-sm); color: var(--muted); background: var(--card2); cursor: pointer; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.calv-vb.fl { width: 32px; padding: 0; }
+.calv-vb[aria-pressed="true"] { background: var(--selBg); color: var(--link); font-weight: 500; }
+.calv-vb:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.calv-mois { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.calv-j7 { padding: 2px 0 var(--s-1); text-align: center; font-size: var(--t-xs); color: var(--muted); }
+:where(.calv-cel) { all: unset; }
+.calv-cel { --c: var(--c-row); box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 64px; padding: 4px; font-size: var(--t-xs); background: var(--card2); cursor: pointer; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.calv-cel.hors { opacity: .45; }
+.calv-cel > .n { align-self: flex-start; padding: 0 3px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.calv-cel.auj > .n { background: var(--pri); color: #fff; }
+.calv-cel[aria-selected="true"] { background: var(--selBg); box-shadow: inset 0 0 0 1px var(--selBd); }
+.calv-cel:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.calv-ev { display: block; padding: 1px 4px; overflow: hidden; border-left: 2px solid var(--k); background: color-mix(in oklab, var(--k) 22%, var(--card)); font-size: 11px; line-height: 1.35; white-space: nowrap; text-overflow: ellipsis; color: var(--text); }
+.calv-plus { padding-left: 4px; font-size: 11px; color: var(--muted); }
+.calv-sem { display: grid; grid-template-columns: 36px repeat(7, minmax(0, 1fr)); }
+:where(.calv-hj) { all: unset; }
+.calv-hj { display: grid; justify-items: center; padding-bottom: var(--s-1); font-size: var(--t-xs); color: var(--muted); cursor: pointer; }
+.calv-hj > b { padding: 0 4px; font-size: var(--t-sm); font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.calv-hj.auj > b { color: var(--link); }
+.calv-hj[aria-selected="true"] > b { background: var(--pri); color: #fff; }
+.calv-hj:focus-visible { box-shadow: inset 0 0 0 1.5px var(--focus); }
+.calv-hh { box-sizing: border-box; height: var(--hh, 32px); padding-right: 4px; transform: translateY(-6px); text-align: right; font-size: 10px; color: var(--muted); }
+.calv-col { position: relative; border-left: 1px solid var(--stroke); background: repeating-linear-gradient(180deg, transparent 0 calc(var(--hh, 32px) - 1px), var(--stroke) calc(var(--hh, 32px) - 1px) var(--hh, 32px)); cursor: pointer; }
+.calv-col.choisi { background-color: color-mix(in oklab, var(--selBg) 60%, transparent); }
+.calv-blk { --c: 3px; position: absolute; left: 2px; right: 2px; overflow: hidden; padding: 2px 4px; border-left: 2px solid var(--k); background: color-mix(in oklab, var(--k) 30%, var(--card)); font-size: 10.5px; line-height: 1.25; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.calv-blk > b { display: block; font-weight: 600; }
+.calv-now { position: absolute; z-index: var(--z-dessus); left: 0; right: 0; height: 2px; background: var(--hi); }
+.calv-liste { display: grid; gap: var(--s-1); }
+.calv-liste > p { margin: 0; font-size: var(--t-xs); color: var(--muted); }
+.calv-it { --c: var(--c-row); display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: var(--s-2); padding: var(--s-2) var(--s-3); border-left: 3px solid var(--k); background: var(--card2); font-size: var(--t-sm); clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.calv-it > .q { padding-top: 2px; font-size: var(--t-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.calv-leg { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-xs); color: var(--muted); }
+.calv-leg > span { display: inline-flex; align-items: center; gap: var(--s-2); }
+.calv-leg i { width: 9px; height: 7.8px; background: var(--k); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+@media (pointer: coarse) { .calv-vb { height: 44px; } .calv-vb.fl { width: 44px; } }
+
+/* ── Kanban (06/11/2026, 1.18.0, specs/kanban.md) ──────────────────────────────────────
+   Piste B : colonnes en blocs coupés, hexagone de couleur de l'étape (--k) devant le nom, cartes de la charte. Glisser (les
+   colonnes défilent quand la carte reste près d'un bord) ; clavier : Espace prend, ← → déplacent, Espace pose, Échap annule.
+   div.kanban[data-kanban] > div.kanban-z > section.kcol[data-col][style="--k: var(--g1)"] > h3.kcol-t + div.kc.cs.cut[data-id] > .in.cut2 */
+.kanban { display: grid; gap: var(--s-2); min-width: 0; }
+.kanban-z { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: var(--s-3); overflow-x: auto; padding-bottom: var(--s-2); scroll-snap-type: x mandatory; }
+.kanban-z.glisse { scroll-snap-type: none; }
+.kcol { --c: var(--c-card); display: grid; align-content: start; gap: var(--s-2); min-height: 200px; padding: var(--s-2); background: var(--card2); scroll-snap-align: start; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); transition: background var(--dh) var(--ease); }
+.kcol.cible { background: var(--selBg); }
+.kcol-t { display: flex; align-items: center; gap: var(--s-2); margin: 0; padding: var(--s-1) 2px; font: 600 var(--t-sm)/1.3 'Saira', sans-serif; font-stretch: 110%; }
+.kcol-t::before { content: ''; flex: none; width: 9px; height: 7.8px; background: var(--k, var(--muted)); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.kcol-t > .nb { font-size: var(--t-xs); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.kc { --c: var(--c-row); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
+.kc > .in { --f: var(--card); display: grid; gap: 2px; padding: var(--s-2) var(--s-3); }
+.kc b { font-size: var(--t-sm); font-weight: 500; }
+.kc span { font-size: var(--t-xs); color: var(--muted); }
+.kc:focus-visible { background: var(--focus); }
+.kc.pris { background: var(--acc); }
+.kc.pris > .in { --f: var(--selBg); }
+.kc.fantome { opacity: .35; }
+.kc-vol { position: fixed; z-index: var(--z-menu); width: 220px; pointer-events: none; transform: rotate(2deg); filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .35)); }
+.kc-trou { height: 4px; margin: -1px 0; background: var(--acc); }
+.kanban-etat { min-height: 1.4em; margin: 0; font-size: var(--t-xs); color: var(--muted); }
+
+/* ── Menu contextuel (06/11/2026, 1.18.0, specs/menu-contextuel.md) ────────────────────
+   Piste B : le menu d'actions (.am) ouvert au pointeur, avec en tête le nom de l'élément visé ; au toucher (appui long),
+   la feuille du bas du menu d'actions. [data-menu-ctx="id"][data-titre][data-sous] + <template id> comme le menu d'actions. */
+.am-tete { display: grid; gap: 1px; margin-bottom: var(--s-1); padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--stroke); }
+.am-tete b { font-size: var(--t-sm); font-weight: 600; }
+.am-tete span { font-size: var(--t-xs); color: var(--muted); }
+[data-menu-ctx] { -webkit-touch-callout: none; }
+.cs.ctx-ouvre { background: var(--acc); }
+.cs.ctx-ouvre > .in { --f: var(--selBg); }
+
+/* ── Palette de commandes (06/11/2026, 1.19.0, specs/palette.md) ───────────────────────
+   Piste D : la fenêtre centrée et les raccourcis (A), les filtres et l'aperçu (B, l'aperçu dès 700 px de large) ;
+   en dessous de 600 px, plein écran, le champ en haut avec « Annuler » (C). Tout est construit par composants.js :
+   DeclicUI.palette({ elements }) ou <script type="application/json" class="pal-donnees">, Ctrl+K / ⌘K, [data-palette].
+   .pal-voile + div.pal.cs.cut[role=dialog] > .in.cut2 > .pal-ch (svg + input[role=combobox] + kbd.kb / bouton Annuler)
+   + .pal-f (filtres) + .pal-corps (.pal-l[role=listbox] > p.pal-g + button.pal-it[role=option] ; .pal-ap) + .pal-pied */
+.pal-voile { position: fixed; inset: 0; z-index: var(--z-voile); background: var(--scrim); }
+.pal { position: fixed; z-index: var(--z-surface); left: 50%; top: max(var(--s-12), 12vh); transform: translateX(-50%); box-sizing: border-box;
+  width: min(calc(100vw - 32px), 760px); max-height: min(560px, calc(100dvh - 24vh)); display: flex; flex-direction: column; container: pal / inline-size; --c: var(--c-card); background: var(--edgeStrong); }
+.pal > .in { --f: var(--card2); flex: 1 1 auto; height: auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; } /* height: auto, sinon le 100 % de .cs > .in laisse la liste déborder */
+.pal-ch { display: flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-3); border-bottom: 1px solid var(--stroke); flex: none; color: var(--muted); }
+:where(.pal-ch input) { all: unset; }
+.pal-ch input { flex: 1; min-width: 0; height: 48px; font-size: var(--t-base); color: var(--text); }
+.pal-ch input::placeholder { color: var(--muted); }
+.pal-ch .bw { display: none; } /* « Annuler » : au téléphone seulement */
+.pal-f { display: flex; flex-wrap: wrap; gap: var(--s-1); padding: var(--s-2) var(--s-3) 0; flex: none; }
+:where(.pal-f button) { all: unset; }
+.pal-f button { --c: var(--c-badge); padding: 2px var(--s-2); font-size: var(--t-xs); background: var(--card); color: var(--muted); cursor: pointer;
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.pal-f button[aria-pressed="true"] { background: var(--selBg); color: var(--link); }
+.pal-corps { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.pal-l { overflow: auto; padding: var(--s-1); min-height: 0; overscroll-behavior: contain; }
+.pal-g { margin: 0; padding: var(--s-2) var(--s-2) 2px; font-size: var(--t-xs); color: var(--muted); }
+:where(.pal-it) { all: unset; }
+.pal-it { --c: var(--c-row); box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: var(--s-3); min-height: 40px; padding: 0 var(--s-2); font-size: var(--t-sm); color: var(--text); cursor: pointer;
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
+.pal-it > .ic, .pal-it > svg { color: var(--muted); flex: none; }
+.pal-it > span:first-of-type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal-it .kb, .pal-it .pal-sous { margin-left: auto; flex: none; }
+.pal-sous { font-size: var(--t-xs); color: var(--muted); }
+.pal-it[aria-selected="true"] { background: var(--selBg); color: var(--link); }
+.pal-it[aria-selected="true"] > .ic, .pal-it[aria-selected="true"] > svg { color: var(--link); }
+.pal-it mark { background: none; color: var(--link); font-weight: 600; }
+.pal-vide { margin: 0; padding: var(--s-6) var(--s-4); text-align: center; font-size: var(--t-sm); color: var(--muted); }
+.pal-ap { display: none; align-content: start; gap: var(--s-2); padding: var(--s-4); border-left: 1px solid var(--stroke); font-size: var(--t-sm); overflow: auto; }
+.pal-ap b { font: 600 var(--t-lg)/1.2 'Déclic', 'Saira', sans-serif; }
+.pal-ap .pal-g { padding: 0; }
+@container pal (min-width: 700px) { .pal-corps { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); } .pal-ap { display: grid; } }
+.pal-pied { display: flex; flex-wrap: wrap; gap: var(--s-3); padding: var(--s-2) var(--s-3); border-top: 1px solid var(--stroke); font-size: var(--t-xs); color: var(--muted); flex: none; }
+@media (max-width: 599.98px) {
+  .pal { left: 0; top: 0; transform: none; width: 100%; height: 100dvh; max-height: none; --c: 0px; padding: 0; }
+  .pal-ch { padding: env(safe-area-inset-top, 0px) var(--s-2) 0 var(--s-3); min-height: 56px; }
+  .pal-ch .kb { display: none; } .pal-ch .bw { display: inline-flex; }
+  .pal-pied { display: none; }
+}
+@media (pointer: coarse) { .pal-it .kb, .pal-pied { display: none; } }
+
+/* ── En-tête de page (06/11/2026, 1.19.0, specs/en-tete.md) ────────────────────────────
+   Piste D : une brique, chaque morceau en option. Seul le titre est obligatoire.
+   header.ep[data-entete] > nav.bc[data-bc] (fil d'Ariane) + .ep-l (.ep-t > h1.ep-h > span.ep-titre
+   + .badge, p.ep-phrase ; .ep-act > boutons, [data-ep-sec] = secondaire) + .ep-meta (span > b) + .tabs.
+   Sous 480 px de large : le fil se réduit au parent (son .bc-back), les actions [data-ep-sec] passent dans « … » (composants.js).
+   data-repli : quand le titre sort de l'écran, il passe dans la barre du haut (.bh) avec l'action principale (.pri). */
+.ep { container: ep / inline-size; display: grid; gap: var(--s-2); padding-block: var(--s-4) var(--s-2); min-width: 0; }
+.ep-l { display: flex; align-items: flex-start; gap: var(--s-3); flex-wrap: wrap; }
+.ep-t { flex: 1 1 240px; min-width: 0; display: grid; gap: 2px; }
+.ep-h { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
+.ep-titre { font: 600 var(--t-2xl)/1.15 'Déclic', 'Saira', sans-serif; text-wrap: balance; }
+.ep-h .badge { font-family: 'Saira', sans-serif; font-stretch: 110%; }
+.ep-phrase { margin: 0; font-size: var(--t-sm); color: var(--muted); max-width: 72ch; line-height: 1.5; }
+.ep-act { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
+.ep-plus-auto { display: none; }
+.ep-meta { display: flex; flex-wrap: wrap; gap: 2px var(--s-4); font-size: var(--t-xs); color: var(--muted); }
+.ep-meta b { color: var(--text); font-weight: 500; }
+.ep > .tabs { margin-top: var(--s-1); }
+@container ep (max-width: 479.98px) {
+  .ep > .bc ol { display: none; } .ep > .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: 44px; }
+  .ep-l { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-3); } .ep-t { display: contents; }
+  .ep-h { grid-column: 1; } .ep-act { grid-column: 2; grid-row: 1; align-self: start; flex-wrap: nowrap; } .ep-phrase { grid-column: 1 / -1; }
+  .ep-titre { font-size: var(--t-xl); }
+  .ep-act [data-ep-sec] { display: none; } .ep-act .ep-plus-auto { display: inline-flex; }
+}
+.bh-mini { display: flex; align-items: center; gap: var(--s-2); flex: 1; min-width: 0; opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity var(--d) var(--ease), transform var(--d) var(--ease); }
+.bh-mini > span { flex: 1; min-width: 0; font: 600 var(--t-base)/1.2 'Déclic', 'Saira', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bh.ep-replie .bh-mini { opacity: 1; transform: none; pointer-events: auto; }
+.bh.ep-replie .bh-mini ~ .bh-esp { display: none; }
+.bh.ep-replie > .bh-titre { display: none; }
+
+/* ── Enregistrement automatique (06/11/2026, 1.19.0, specs/enregistrement.md) ─────────────
+   Piste C : pas de bouton, un statut discret. span.enr[data-enr][data-etat="ok|modifie|encours|erreur"][aria-live] > i + span ;
+   form[data-auto-enr="id du statut"] : composants.js suit les champs, attend 1 s, lance l'événement « enregistrer ». */
+.enr { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); color: var(--muted); white-space: nowrap; min-width: 0; }
+.enr > span { overflow: hidden; text-overflow: ellipsis; }
+.enr > i { width: 9px; height: 7.8px; flex: none; background: var(--lo); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
+.enr[data-etat="modifie"] > i, .enr[data-etat="encours"] > i { background: var(--md); }
+.enr[data-etat="encours"] > i { animation: enr-clign 1s steps(2) infinite; }
+.enr[data-etat="erreur"] { color: var(--hi); white-space: normal; } .enr[data-etat="erreur"] > i { background: var(--hi); }
+@keyframes enr-clign { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .enr[data-etat="encours"] > i { animation: none; } }
+
+/* ── Infobulle ──────────────────────────────────────────────────────────────
+   .bul = la forme : corps coupé (--c-btn) et pointe en triangle équilatéral, UNE seule forme remplie en --card2 ; le contour
+   de 1 px est tracé par quatre drop-shadow (haut, bas, gauche, droite) sur l'enveloppe : même épaisseur partout, pointe comprise.
+   data-p="top" : bulle au-dessus de l'élément ; "bottom" : en dessous. --ax : position de la pointe (posée par composants.js).
+   .tip = la bulle vivante, au niveau de la page (position: fixed) : fondu de --dh et 4 px de glissé, pas de balayage. */
+.bul { --c: var(--c-btn); --v: calc(var(--c) * 1.732); --pw: 7px; --ph: 12.12px; --ax: 50%; --s: var(--edgeStrong);
+  display: inline-block; max-width: 260px;
+  filter: drop-shadow(0 1px 0 var(--s)) drop-shadow(0 -1px 0 var(--s)) drop-shadow(1px 0 0 var(--s)) drop-shadow(-1px 0 0 var(--s)); }
+.bul > span { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); font-size: var(--t-xs); line-height: 1.4; font-weight: 500; color: var(--text); background: var(--card2); }
+.bul[data-p="top"] > span { padding-bottom: calc(7px + var(--ph));
+  clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--v), 100% calc(100% - var(--ph) - var(--v)), calc(100% - var(--c)) calc(100% - var(--ph)), calc(var(--ax) + var(--pw)) calc(100% - var(--ph)), var(--ax) 100%, calc(var(--ax) - var(--pw)) calc(100% - var(--ph)), var(--c) calc(100% - var(--ph)), 0 calc(100% - var(--ph) - var(--v)), 0 var(--v)); }
+.bul[data-p="bottom"] > span { padding-top: calc(7px + var(--ph));
+  clip-path: polygon(var(--c) var(--ph), calc(var(--ax) - var(--pw)) var(--ph), var(--ax) 0, calc(var(--ax) + var(--pw)) var(--ph), calc(100% - var(--c)) var(--ph), 100% calc(var(--ph) + var(--v)), 100% calc(100% - var(--v)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--v)), 0 calc(var(--ph) + var(--v))); }
+.bul kbd { font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
+.tip { position: fixed; left: 0; top: 0; z-index: var(--z-bulle); opacity: 0; transform: translateY(var(--ty, 4px)); transition: opacity var(--dh) var(--ease), transform var(--dh) var(--ease); }
+.tip.show { opacity: 1; transform: none; }
+.tip-cible { --c: var(--c-btn); width: 34px; height: 34px; background: var(--secBg); } /* faux bouton, pour les aperçus figés */
+
+/* ── Fil d'Ariane ───────────────────────────────────────────────────────────
+   nav.bc > ol > li ; séparateur = le triangle de la charte ; page courante en --text 500, aria-current="page".
+   Plus de 4 niveaux : premier, bouton « … » (.tog), deux derniers ; les niveaux du milieu portent .mid et se masquent
+   quand data-collapsed="true". Ouvert, « … » devient un triangle pointé à gauche (même place) ; le fil se replie aussi
+   tout seul (composants.js). Étroit (< 360 px, requête de conteneur) : seulement « ‹ retour au parent » (.bc-back), 44 px.
+   Le fil occupe toute la largeur de son parent (il est son propre conteneur). */
+.bc { display: block; container-type: inline-size; }
+.bc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; }
+.bc li { display: flex; align-items: center; font-size: var(--t-sm); }
+.bc li + li::before { content: ''; flex: none; width: 6px; height: 7px; margin: 0 var(--s-2); background: var(--muted); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.bc a { --c: var(--c-badge); position: relative; display: inline-block; padding: var(--s-1) var(--s-2); color: var(--link); text-decoration: none; }
+.bc a::after { content: ''; position: absolute; left: 6px; bottom: 1px; width: 0; height: 2.5px; background: var(--acc); clip-path: polygon(1.44px 0, calc(100% - 1.44px) 0, 100% 100%, 0 100%); transition: width var(--d) var(--ease); }
+.bc a:hover::after { width: calc(100% - 12px); }
+.bc [aria-current] { padding: var(--s-1) var(--s-2); font-weight: 500; color: var(--text); }
+.bc[data-collapsed="true"] li.mid { display: none; }
+.bc li.mid { animation: bc-in 300ms var(--ease) backwards; }
+.bc li.mid:nth-child(4) { animation-delay: 80ms; } .bc li.mid:nth-child(5) { animation-delay: 160ms; }
+.bc li.mid:nth-child(6) { animation-delay: 240ms; } .bc li.mid:nth-child(n+7) { animation-delay: 320ms; } /* cascade de 80 ms */
+@keyframes bc-in { from { opacity: 0; transform: translateX(-6px); } }
+.bc .tog { --bh: 28px; }
+.bc .tog .cut2 { padding: 0 var(--s-3); font-weight: 600; }
+.bc .tog .fold { display: none; width: 7px; height: 8px; background: currentColor; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.bc:not([data-collapsed="true"]) .tog .dots { display: none; }
+.bc:not([data-collapsed="true"]) .tog .fold { display: block; }
+.bc .bc-back { display: none; }
+.bc .bc-back::before { content: ''; width: 6px; height: 7px; margin-right: var(--s-2); background: currentColor; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.bc .bc-back::after { display: none; }
+@container (max-width: 360px) {
+  .bc ol { display: none; }
+  .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: 44px; }
+}
+
+/* ── Barre de progression ───────────────────────────────────────────────────
+   .pg > .pg-head (b + output) + .pg-track[role="progressbar"] > .pg-fill. La valeur est un nombre sans unité, --p (0 à 100),
+   posé sur .pg : aucun JavaScript pour le dessin. Parallélogramme à 60° (biais = hauteur × 0,577), 10 px, .big 16 px.
+   Remplissage en dégradé posé sur TOUTE la piste, que la barre découvre en avançant : sombre au départ, vif à l'arrivée.
+   .ok (réussite, --lo) et .bad (échec, --hi) : aplats, toujours avec un texte. .ind : indéterminée. .nopct : sans pourcentage.
+   Barre = tâche qui finira, avec un chiffre. Jauge .gauge = réserve ou étapes, jamais de pourcentage. */
+.pg { --p: 0; --h: 10px; --b: calc(var(--h) * .577); display: grid; gap: var(--s-2); transition: --p var(--dp) var(--ease); }
+.pg.big { --h: 16px; }
+.pg-head { display: flex; justify-content: space-between; gap: var(--s-3); font-size: var(--t-sm); }
+.pg-head b { font-weight: 500; }
+.pg-head output { color: var(--muted); font-variant-numeric: tabular-nums; }
+.pg.nopct .pg-head output { display: none; }
+.pg-track { position: relative; height: var(--h); overflow: hidden; background: var(--border); clip-path: polygon(var(--b) 0, 100% 0, calc(100% - var(--b)) 100%, 0 100%); }
+.pg-fill { position: absolute; inset: 0 auto 0 0; width: calc(var(--p) * 1%); min-width: calc(var(--b) * 2);
+  background: linear-gradient(90deg, color-mix(in oklab, var(--pg-c, var(--acc)), var(--bg) 55%), var(--pg-c, var(--acc)));
+  background-size: calc(100% * 100 / max(var(--p), 1)) 100%; /* = la longueur de la piste, quel que soit --p */
+  clip-path: polygon(var(--b) 0, 100% 0, calc(100% - var(--b)) 100%, 0 100%); }
+.pg.ok { --pg-c: var(--lo); } /* même dégradé que la barre en cours (04/11/2026), dans la couleur du statut */
+.pg.bad { --pg-c: var(--hi); }
+.pg.bad .pg-fill { background-size: 100% 100%; } /* exception : elle s'arrête n'importe où, son dégradé va toujours du sombre au vif */
+.pg.ind .pg-fill { width: 34%; background-size: 100% 100%; animation: pg-slide 1.4s var(--ease) infinite; }
+@keyframes pg-slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+@media (prefers-reduced-motion: reduce) { .pg.ind .pg-fill { width: 100%; opacity: .45; animation: none; } }
+
+/* ── Carte de statistique ───────────────────────────────────────────────────
+   .cs.acc.cut.card.stat > .in.cut2 > (.st-main : .st-l + .st-v + .st-f) + svg.st-sp. Chiffres en Saira (Déclic = titres seulement),
+   tabular-nums. Variation en badge : la FORME dit la direction (.tri.up / .tri.down), la COULEUR dit bon (.bg-lo) ou mauvais
+   (.bg-hi), le texte « Hausse de / Baisse de » (.sr) est lu. Courbe : trait de 2 px à angles vifs, aire à 16 %, dernier point en
+   hexagone régulier (largeur × 0,866 = hauteur). Étroit (< 340 px) : la courbe passe sous le chiffre. */
+.stat { --c: var(--c-card); container-type: inline-size; }
+.stat > .in { --f: var(--card); display: grid; grid-template-columns: minmax(0, 1fr) minmax(96px, 42%); gap: var(--s-4); align-items: center; padding: var(--s-4) var(--s-4); }
+@container (max-width: 340px) { .stat > .in { grid-template-columns: minmax(0, 1fr); } }
+.st-main { min-width: 0; }
+.st-l { margin: 0; font-size: var(--t-sm); color: var(--muted); }
+.st-v { margin: 2px 0 var(--s-2); font: 600 var(--t-2xl)/1.1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; }
+.st-f { margin: 0; display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.st-f .badge { display: inline-flex; align-items: center; gap: var(--s-1); }
+.st-s { font-size: var(--t-xs); color: var(--muted); }
+.tri { width: 8px; height: 6.93px; background: currentColor; flex: none; }
+.tri.up { clip-path: polygon(50% 0, 100% 100%, 0 100%); } .tri.down { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.st-sp { width: 100%; height: 40px; display: block; overflow: visible; }
+.st-area { fill: color-mix(in oklab, var(--acc) 16%, transparent); }
+.st-line { fill: none; stroke: var(--acc); stroke-width: 2; stroke-linejoin: miter; stroke-miterlimit: 4; }
+.st-pt { fill: var(--card); stroke: var(--acc); stroke-width: 1.6; }
+
+/* ── Squelette de chargement ────────────────────────────────────────────────
+   Blocs coupés (.sk.cut) à la forme du contenu, balayés par une bande inclinée à 60° au reflet bleuté (transparent → --acc 30 %
+   → transparent), 1,6 s, cascade de 140 ms (--i : 0, 1, 2…). Remplace leeroy-skeletonPulse (clignotement).
+   Formes : .sk.m (média 48 px) .l (ligne) .l.t (titre) .a (action ou badge) .f (champ) .n (chiffre) .g (courbe) ; largeur en style inline.
+   Conteneur .skw[aria-busy] : le jeu de blocs .sk-set (aria-hidden) reste invisible jusqu'à .sk-on, posé par
+   DeclicUI.skeleton() après 300 ms d'attente, pour ne pas clignoter sur un chargement rapide. */
+.sk { --c: var(--c-badge); display: block; position: relative; overflow: hidden; background: color-mix(in oklab, var(--card), var(--borderHi) 55%); flex: none; }
+.sk::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 34%; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--acc) 30%, transparent) 50%, transparent);
+  transform: translateX(-160%) skewX(-30deg); animation: sk-sweep 1.6s var(--ease) infinite; animation-delay: calc(var(--i, 0) * 140ms); }
+@keyframes sk-sweep { to { transform: translateX(420%) skewX(-30deg); } }
+@media (prefers-reduced-motion: reduce) { .sk::after { display: none; } } /* blocs fixes */
+.sk.m { --c: var(--c-row); width: 48px; height: 48px; }
+.sk.l { height: 12px; } .sk.l.t { height: 18px; }
+.sk.a { width: 64px; height: 14px; }
+.sk.f { --c: var(--c-inp); width: 100%; height: var(--fh-top); }
+.sk.n { width: 45%; height: 30px; }
+.sk.g { width: 100%; height: 40px; }
+.sk-set { display: grid; gap: var(--s-2); }
+.skw:not(.sk-on) .sk-set { visibility: hidden; }
+.sk-row { --c: var(--c-row); }
+.sk-row > .in { --f: var(--card); display: flex; gap: var(--s-4); align-items: center; padding: var(--s-4); } /* hauteur d'une ligne de liste riche compacte, à 3 px près */
+.sk-lines { flex: 1; min-width: 0; display: grid; gap: var(--s-2); }
+.sk-cols { display: flex; gap: var(--s-4); align-items: center; padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--stroke); } /* ligne de tableau */
+.sk-text { display: grid; gap: var(--s-2); } /* paragraphe */
+.sk-fieldw { display: grid; gap: var(--s-2); margin-bottom: var(--field-mb); } /* champ de formulaire */
+
+/* ═══ État vide (03/11/2026, specs/etat-vide.md : pistes B + C) ═══════════════
+   .empty > .empty-ic (icône de 32 px) + p (strong + phrase) + bouton
+   Tireté coupé à 60° natif (1.2.0, règles communes avec .coupe) ; Firefox et Safari : tracé par composants.js.
+   svg.empty-trace : celui d'un EmptyState d'avant 1.2.0 ; s'il est là, la bordure native s'efface. */
+.empty { --c: var(--c-row); --trait: var(--borderHi); border-style: dashed; display: grid; justify-items: center; text-align: center; gap: var(--s-3); padding: var(--s-7) var(--s-4) var(--s-6); }
+.empty-ic, .empty-ic svg { width: 32px; height: 32px; color: var(--muted); }
+.empty p { margin: 0; color: var(--muted); font-size: var(--t-sm); max-width: 38ch; }
+.empty strong { display: block; color: var(--text); font-weight: 500; font-size: var(--t-base); margin-bottom: 2px; }
+.empty-trace { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.empty-trace polygon { fill: none; stroke: var(--borderHi); stroke-width: 1; stroke-dasharray: 5 4; }
+.empty:has(> .empty-trace) { border-color: transparent; }
+.empty > .trace polygon { fill: none; }
+:root[data-density="compact"] .empty { gap: var(--s-3); padding: var(--s-5) var(--s-3) var(--s-4); }
+} /* fin @layer components */
+
+/* --p de la barre de progression : un nombre enregistré, pour que la barre et son dégradé avancent ensemble (sans enregistrement, la barre saute à sa valeur) */
+@property --p { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+/* ── Animations héritées de Leeroy, OBSOLÈTES depuis 1.7.0 : retrait en 2.0.0, quand plus aucune app ne les utilise ──
+   (audit-charte.py règle 1). Remplaçants : apparition « Coupe 60° » (surfaces), squelette .sk, viseur, mouvement de la charte. */
+@keyframes leeroy-wave { from { height: 4px; } to { height: 32px; } } /* charte-ok : définition */
+@keyframes leeroy-fadeIn { from { opacity: 0; } to { opacity: 1; } } /* charte-ok : définition */
+@keyframes leeroy-skeletonPulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } } /* remplacé par le squelette Déclic (.sk, balayage à 60°), ne plus utiliser */ /* charte-ok : définition */
+@keyframes leeroy-blinkCursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } } /* charte-ok : définition */
+@keyframes leeroy-pulseRing { 0% { box-shadow: 0 0 0 0 currentColor; } 70% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } } /* charte-ok : définition */
+@keyframes leeroy-floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-40px); opacity: 0; } } /* charte-ok : définition */
+@keyframes leeroy-bump { 0% { transform: scale(1); } 40% { transform: scale(1.2); } 100% { transform: scale(1); } } /* charte-ok : définition */
+@keyframes leeroy-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } /* charte-ok : définition */
+/* remplacées par l'apparition « Coupe 60° » mais gardées pour les projets pas encore migrés */
+@keyframes leeroy-slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } } /* charte-ok : définition */
+@keyframes leeroy-fadeScale { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } } /* charte-ok : définition */
+@keyframes leeroy-panelIn { from { opacity: 0; transform: scale(.985) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } } /* charte-ok : définition */
+
+/* ── Graphiques complets (07/11/2026, 1.20.0, specs/graphiques.md) ───────────────────
+   div.gr[data-graphique] > script[type="application/json"] : composants.js dessine tout (titre, légende, svg, valeurs).
+   Types : courbe, colonnes (empilées dès deux séries), parts (barre, par défaut), anneau (hexagonal, total au centre).
+   Lecture (piste B) : pas de bulle, la légende donne les valeurs du point lu (.gr-q = le point) ; au repos, le dernier.
+   Valeurs (piste B) : tableau replié dessous dans l'accordéon (.gr-val). Fond des marques : --gr-fond (défaut --card). */
+.gr { --gr-fond: var(--card); display: grid; align-content: start; gap: var(--s-2); grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.gr-t { margin: 0; font-size: var(--t-sm); font-weight: 500; color: var(--text); }
+.gr-leg { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); margin: 0; padding: 0; list-style: none; font-size: var(--t-xs); color: var(--muted); min-height: 1.5em; }
+.gr-i { display: inline-flex; align-items: center; gap: var(--s-2); }
+.gr-i b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.gr-q { color: var(--text); font-weight: 500; }
+.gr-k { display: block; flex: none; width: 10px; height: 10px; }
+.gr-k.trait { width: 16px; height: 4px; overflow: visible; }
+.gr-liste { display: grid; gap: var(--s-1); }
+.gr-liste .gr-i { display: flex; }
+.gr-liste em { margin-left: auto; font-style: normal; color: var(--text); font-variant-numeric: tabular-nums; }
+.gr-liste .gr-i.on { color: var(--text); font-weight: 500; }
+.gr-liste .gr-tot .gr-k { background: none; }
+.gr-z { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.gr-z svg { display: block; width: 100%; overflow: visible; }
+.gr-z svg:focus { outline: none; }
+.gr-z svg:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 4px; }
+.gr-z text { font: 11px 'Saira', sans-serif; font-stretch: 110%; fill: var(--muted); }
+.gr-z text.gr-in { font-weight: 600; pointer-events: none; }
+.gr-z text.gr-c1 { font: 600 28px 'Déclic', 'Saira', sans-serif; fill: var(--text); }
+.gr-g { stroke: var(--border); } .gr-base { stroke: var(--edgeStrong); } .gr-ret { stroke: var(--edgeStrong); }
+.gr-ln { fill: none; stroke-width: 2; stroke-linejoin: miter; }
+.gr-pt { stroke: var(--gr-fond); stroke-width: 2; }
+.gr-anneau { stroke: var(--gr-fond); stroke-width: 2; stroke-linejoin: miter; }
+.gr-z g, .gr-m { transition: opacity var(--dh) var(--ease); }
+.gr-tx rect { fill: none; } .gr-tx path { stroke: none; }
+.gr-val .accord-b { min-height: 40px; font-size: var(--t-sm); }
+.gr-val .gr-k { display: inline-block; margin-right: var(--s-2); vertical-align: -1px; }
+.gr-val .gr-k.trait { vertical-align: 2px; }
+.gr-val .tab tfoot td { background: none; font-weight: 600; }
+.gr-val .tab tfoot td:first-child { background: var(--card2); clip-path: none; } /* la 1re cellule reste collante : un fond, sinon « Total » passe sur les valeurs au défilement */
+.accord-p .tab th:first-child { background: var(--card2); } .accord-p .tab td { background: var(--card); } /* un tableau dans un accordéon (fond --card2) */
+/* texture : à l'impression et en couleurs forcées, la couleur ne suffit plus (traits à 45° / 135°, pointillés) */
+@media print, (forced-colors: active) {
+  .gr svg, .gr .gr-k { forced-color-adjust: none; }
+  .gr .gr-m { fill: var(--tx) !important; }
+  .gr .gr-tx rect { fill: Canvas; } .gr .gr-tx path { stroke: CanvasText; stroke-width: 1.5; }
+  .gr .gr-ln { stroke: CanvasText !important; stroke-dasharray: var(--dash); }
+  .gr .gr-pt { fill: CanvasText !important; stroke: Canvas; }
+  .gr .gr-anneau, .gr .gr-pt { stroke: Canvas; }
+  .gr i.gr-k { background: var(--txb) !important; outline: 1px solid CanvasText; }
+  .gr .gr-tot .gr-k { outline: none; background: none !important; }
+  .gr text.gr-in { display: none; }
+}
+.gr-val .accord-p > div > * { margin-left: var(--s-3); }
+
+/* ── Accessibilité ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

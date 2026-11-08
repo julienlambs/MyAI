@@ -14,7 +14,7 @@ export default function HexBackground() {
     const w = r * Math.sqrt(3)
     const vStep = r * 1.5
     const ns = 'http://www.w3.org/2000/svg'
-    const accentRgb = '96,80,220'
+    const accentRgb = '44,100,223'
 
     function hexPts(cx, cy) {
       const pts = []
