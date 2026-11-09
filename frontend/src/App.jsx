@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import HexBackground from './components/HexBackground'
 import Header from './components/Header'
 import ChatPanel from './components/ChatPanel'
 import FilesPanel from './components/FilesPanel'
@@ -9,7 +8,7 @@ import { AgentSocketProvider } from './lib/useAgentSocket'
 import { ThemeProvider } from './lib/useTheme'
 import { PanelBridgeProvider } from './lib/usePanelBridge'
 import { DialogProvider } from './lib/useDialogs'
-import { useViseurFocus } from '@declic/ui'
+import { SphinxBackground, useViseurFocus } from '@declic/ui'
 
 const ORDER = ['chat', 'files', 'terminal']
 const SHORTCUT_TO_PANEL = { '1': 'chat', '2': 'files', '3': 'terminal' }
@@ -107,7 +106,8 @@ export default function App() {
       <PanelBridgeProvider>
       <DialogProvider>
         <div id="app" style={{ position: 'relative', width: '100vw', overflow: 'hidden' }}>
-          <HexBackground />
+          {/* calques fixes en z-index -1 : visibles entre les panneaux et sous l'en-tête translucide */}
+          <SphinxBackground />
           <div className="shell">
             <Header activePanel={activePanel} setActivePanel={setActivePanel} />
             <div

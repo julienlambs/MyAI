@@ -15,10 +15,6 @@ body { overflow: hidden; }
   .panel.is-main, .cursor, .context-track.context-warning, .gpu-widget.gpu-warning { animation: none; }
 }
 
-/* ── Fond (remplacé par le fond sphinx au lot 4) ── */
-#hex-bg { position: absolute; inset: 0; opacity: .55; pointer-events: none; z-index: var(--z-fond); }
-#hex-bg svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-
 /* ── Coquille ── */
 /* dvh tient compte de la barre d'adresse/onglets des navigateurs mobiles —
    vh seul ne se réduit pas quand elle est visible, ce qui pousse le bas de
@@ -70,7 +66,7 @@ body { overflow: hidden; }
 .kbd { display: inline-flex; }
 
 /* Badge du dossier de session : un bouton (déplie le chemin complet au clic), habillé en badge neutre. */
-.cwd-pill { border: 0; font-family: inherit; cursor: pointer; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cwd-pill { border: 0; font-family: inherit; font-stretch: inherit; cursor: pointer; /* un <button> n'hérite ni de la police ni de la largeur 110 % */ max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cwd-pill.expanded { max-width: none; white-space: normal; word-break: break-all; }
 
 /* Jauge de contexte façon barre de ressource : dégradé lo → md → hi, recouvert au-delà du % utilisé. */
