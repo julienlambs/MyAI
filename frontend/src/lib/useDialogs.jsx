@@ -36,7 +36,7 @@ function Dialog({ dialog, close }) {
                 <Btn type="button" kind="sec" onClick={cancel} ref={dialog.type === 'prompt' ? undefined : firstRef}>Annuler</Btn>
               )}
               <Btn type="submit" kind={dialog.danger ? 'dan' : 'pri'} ref={dialog.type === 'alert' ? firstRef : undefined}>
-                {dialog.action || (dialog.type === 'alert' ? 'OK' : 'Continuer')}
+                {dialog.action || (dialog.type === 'alert' ? 'Fermer' : 'Continuer')}
               </Btn>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function DialogProvider({ children }) {
 
   const confirm = useCallback((message, opts) => open('confirm', message, '', opts), [open])
   const alert = useCallback((message) => open('alert', message), [open])
-  const prompt = useCallback((message, defaultValue) => open('prompt', message, defaultValue), [open])
+  const prompt = useCallback((message, defaultValue, opts) => open('prompt', message, defaultValue, opts), [open])
 
   function close(result) {
     resolveRef.current?.(result)

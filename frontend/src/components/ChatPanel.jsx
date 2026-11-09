@@ -46,8 +46,8 @@ function LoadingIndicator() {
     <div className="loading-indicator">
       <span className="loading-phrase">{phrase}</span>
       <span className="loading-meta">
-        {elapsedSeconds.toFixed(1).replace('.', ',')} s
-        {tokenEstimate > 0 && <> · <Icone nom="descendre" /> {tokenEstimate} tokens</>}
+        {elapsedSeconds.toFixed(1).replace('.', ',')} s
+        {tokenEstimate > 0 && <> · <Icone nom="descendre" /> {tokenEstimate.toLocaleString('fr-FR')} tokens</>}
       </span>
     </div>
   )
@@ -144,7 +144,7 @@ function SessionList({ cwd, onClose }) {
 
   async function handleSelect(sessionId) {
     onClose()
-    if (messages.length > 0 && !(await confirm('La conversation en cours sera perdue. Continuer ?'))) return
+    if (messages.length > 0 && !(await confirm('Quitter la conversation en cours ?', { action: 'Reprendre la session' }))) return
     resumeProject(cwd, sessionId)
   }
 
@@ -276,7 +276,7 @@ function AskUserQuestionForm({ questions, onSubmit }) {
       })}
       <div>
         <Btn type="button" disabled={!questions.some((_, idx) => hasAnswer(idx))} onClick={handleSubmit}>
-          Valider les réponses
+          Envoyer les réponses
         </Btn>
       </div>
     </div>
@@ -412,7 +412,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
 
   async function handleConfirmNewSession() {
     if (!newSessionPath.trim()) return
-    if (messages.length > 0 && !(await confirm('La conversation en cours sera perdue. Continuer ?'))) return
+    if (messages.length > 0 && !(await confirm('Quitter la conversation en cours ?', { action: 'Démarrer la session' }))) return
     newSession(newSessionPath.trim())
     setShowNewSessionForm(false)
   }
@@ -517,7 +517,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
             <span className="context-label">Contexte</span>
             <span className="context-value" style={{ color: contextColor(contextUsage?.percent) }}>
               {contextUsage?.percent != null
-                ? `${contextUsage.percent} % · ${formatTokens(contextUsage.used)} / ${formatTokens(contextUsage.total)} tokens`
+                ? `${contextUsage.percent} % · ${formatTokens(contextUsage.used)} / ${formatTokens(contextUsage.total)} tokens`
                 : '—'}
             </span>
           </div>
@@ -535,7 +535,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
           {connected && messages.length === 0 && (
             <div className="empty-daemon">
               <div><span className="caret">&gt;</span> myai.chat()</div>
-              <div>statut : en ligne&nbsp;&nbsp;/&nbsp;&nbsp;historique : vide</div>
+              <div>statut&nbsp;: en ligne&nbsp;&nbsp;/&nbsp;&nbsp;historique&nbsp;: vide</div>
               <div className="note">[note] aucune tâche en cours. En attente.</div>
             </div>
           )}
@@ -559,7 +559,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
                       icon={<Icone nom={isOpen ? 'replier' : 'deplier'} />}
                       onClick={() => setExpandedGroups((p) => ({ ...p, [m.id]: !p[m.id] }))}
                     >
-                      {m.items.length} actions{isOpen ? '' : ', cliquer pour détailler'}
+                      {m.items.length} actions
                     </Btn>
                     {isOpen && m.items.map((item) => (
                       <div className="msg-system cut tool-group-item" key={item.id}>{item.text}</div>
@@ -621,7 +621,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
                   </div>
                   {danger && (
                     <div className="danger-warning">
-                      Commande potentiellement destructrice détectée ({pendingPermission.dangerousCommand}) : vérifie avant d’approuver.
+                      Commande potentiellement destructrice détectée ({pendingPermission.dangerousCommand}) : vérifie avant d’approuver.
                     </div>
                   )}
                   <code className="cmd cut">{pendingPermission.toolTitle}</code>
@@ -638,7 +638,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
                   {!isQuestionForm && pendingPermission.options?.some((o) => o.kind === 'allow_always') && (
                     <Btn kind="sec" onClick={handleApproveAlways}
                       data-tip="Toujours autoriser ce type d’action dans ce dossier, pour la durée de vie du backend">
-                      Toujours
+                      Toujours autoriser
                     </Btn>
                   )}
                   {!isQuestionForm && <Btn onClick={handleApprove}>Approuver</Btn>}

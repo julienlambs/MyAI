@@ -66,9 +66,10 @@ function buildRows(childrenByPath, expandedPaths, parentPath, depth, out, sortBy
 
 function formatSize(bytes) {
   if (bytes == null) return '—'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+  const n = (x) => x.toLocaleString('fr-FR', { maximumFractionDigits: 1 })
+  if (bytes < 1024) return `${bytes} o`
+  if (bytes < 1024 * 1024) return `${n(bytes / 1024)} Ko`
+  return `${n(bytes / (1024 * 1024))} Mo`
 }
 
 function formatModified(iso) {
@@ -90,11 +91,11 @@ function countLoaded(childrenByPath, showHidden) {
 }
 
 const GIT_BADGE_META = {
-  '?': { label: '+', color: 'var(--lo)', title: 'non suivi' },
-  A: { label: '+', color: 'var(--lo)', title: 'ajouté' },
-  D: { label: '−', color: 'var(--hi)', title: 'supprimé' },
-  U: { label: '!', color: 'var(--hi)', title: 'conflit' },
-  M: { label: 'M', color: 'var(--md)', title: 'modifié' },
+  '?': { label: '+', color: 'var(--lo)', title: 'Non suivi par Git' },
+  A: { label: '+', color: 'var(--lo)', title: 'Ajouté' },
+  D: { label: '−', color: 'var(--hi)', title: 'Supprimé' },
+  U: { label: '!', color: 'var(--hi)', title: 'En conflit' },
+  M: { label: 'M', color: 'var(--md)', title: 'Modifié' },
 }
 
 function gitBadge(code, summary) {
@@ -401,7 +402,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
   }
 
   async function handleCreate(parentPath, kind) {
-    const name = await prompt(kind === 'folder' ? 'Nom du nouveau dossier :' : 'Nom du nouveau fichier :')
+    const name = await prompt(kind === 'folder' ? 'Nouveau dossier' : 'Nouveau fichier', '', { action: kind === 'folder' ? 'Créer le dossier' : 'Créer le fichier' })
     if (!name) return
     try {
       const res = await fetch('/api/files/create', {
@@ -411,18 +412,19 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        await alert(err.detail || `Erreur ${res.status}`)
+        await alert(`Création impossible : ${err.detail || `erreur ${res.status}`}.`)
         return
       }
       await refreshFolder(parentPath)
       if (parentPath && !expandedPaths[parentPath]) setExpandedPaths((p) => ({ ...p, [parentPath]: true }))
     } catch (err) {
-      await alert(err.message)
+      await alert(`Création impossible. Vérifie que le serveur MyAI tourne, puis réessaie.`)
+      console.error(err)
     }
   }
 
   async function handleRename(item) {
-    const newName = await prompt('Renommer en :', item.name)
+    const newName = await prompt(`Renommer « ${item.name} »`, item.name, { action: 'Renommer' })
     if (!newName || newName === item.name) return
     try {
       const res = await fetch('/api/files/rename', {
@@ -432,7 +434,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        await alert(err.detail || `Erreur ${res.status}`)
+        await alert(`Renommage impossible : ${err.detail || `erreur ${res.status}`}.`)
         return
       }
       if (item.type === 'folder') resetTree()
@@ -441,24 +443,27 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
       setSelectedPaths(new Set())
       setPreview(null)
     } catch (err) {
-      await alert(err.message)
+      await alert(`Renommage impossible. Vérifie que le serveur MyAI tourne, puis réessaie.`)
+      console.error(err)
     }
   }
 
   async function handleDelete(items) {
     if (items.length === 0) return
-    const label = items.length > 1 ? `${items.length} éléments` : items[0].name
-    if (!(await confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`, { action: 'Supprimer', danger: true }))) return
+    const label = items.length > 1 ? `les ${items.length} éléments sélectionnés` : `« ${items[0].name} »`
+    const action = items.length > 1 ? `Supprimer les ${items.length} éléments` : (items[0].type === 'folder' ? 'Supprimer le dossier' : 'Supprimer le fichier')
+    if (!(await confirm(`Supprimer ${label} ?\nCette action ne peut pas être annulée.`, { action, danger: true }))) return
     const hasFolder = items.some((it) => it.type === 'folder')
     for (const item of items) {
       try {
         const res = await fetch(`/api/files/delete?path=${encodeURIComponent(item.path)}&root=${encodeURIComponent(root)}`, { method: 'DELETE' })
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
-          await alert(`${item.name} : ${err.detail || `Erreur ${res.status}`}`)
+          await alert(`Suppression de « ${item.name} » impossible : ${err.detail || `erreur ${res.status}`}.`)
         }
       } catch (err) {
-        await alert(`${item.name} : ${err.message}`)
+        await alert(`Suppression de « ${item.name} » impossible. Vérifie que le serveur MyAI tourne, puis réessaie.`)
+        console.error(err)
       }
     }
     if (hasFolder) {
@@ -630,7 +635,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
 
           {!error && isSearching && searchLoading && (
             <div className="empty-daemon">
-              <div><span className="caret">&gt;</span> myai.files.{searchMode === 'content' ? 'grep' : 'search'}(« {filter} »)</div>
+              <div><span className="caret">&gt;</span> myai.files.{searchMode === 'content' ? 'grep' : 'search'}(«&nbsp;{filter}&nbsp;»)</div>
               <div className="note">[note] recherche en cours…</div>
             </div>
           )}
@@ -658,7 +663,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
               )
             }) : (
               <div className="empty-daemon">
-                <div><span className="caret">&gt;</span> myai.files.search(« {filter} »)</div>
+                <div><span className="caret">&gt;</span> myai.files.search(«&nbsp;{filter}&nbsp;»)</div>
                 <div className="note">[note] aucun résultat.</div>
               </div>
             )
@@ -682,7 +687,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
               )
             }) : (
               <div className="empty-daemon">
-                <div><span className="caret">&gt;</span> myai.files.grep(« {filter} »)</div>
+                <div><span className="caret">&gt;</span> myai.files.grep(«&nbsp;{filter}&nbsp;»)</div>
                 <div className="note">[note] aucun résultat.</div>
               </div>
             )
@@ -691,7 +696,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
           {!error && !isSearching && childrenByPath[''] && rows.length === 0 && (
             <div className="empty-daemon">
               <div><span className="caret">&gt;</span> myai.files.list()</div>
-              <div>éléments : 0</div>
+              <div>éléments&nbsp;: 0</div>
               <div className="note">[note] dossier vide.</div>
             </div>
           )}
@@ -717,7 +722,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
                 {gitBadgeEl(r)}
                 <span className="tree-name">{r.name}</span>
                 {r.type === 'file' && isRecent(r.modified, now) && (
-                  <span className="recent-dot cut" data-tip="Modifié il y a moins de 5 min" aria-label="Modifié il y a moins de 5 min" />
+                  <span className="recent-dot cut" data-tip="Modifié il y a moins de 5 min" aria-label="Modifié il y a moins de 5 min" />
                 )}
               </div>
             )

@@ -1,5 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useReducer, useRef } from 'react'
 
+// Statuts ACP d'un appel d'outil (anglais côté protocole), affichés en français dans le chat.
+const TOOL_STATUS = { pending: 'en attente', in_progress: 'en cours', completed: 'terminé', failed: 'échec' }
+
 let uid = 0
 function nextId() { return `m${++uid}` }
 
@@ -109,7 +112,7 @@ function applyEvent(state, event) {
       // l'annonce initiale l'a) — sans ça, un titre déjà connu se faisait
       // écraser par le texte générique "action" à chaque update suivant.
       const title = event.title || (idx >= 0 ? messages[idx].toolTitle : null) || 'action'
-      const label = `⚙ ${title} — ${event.status}`
+      const label = `${title} · ${TOOL_STATUS[event.status] ?? event.status}`
       if (idx >= 0) messages[idx] = { ...messages[idx], text: label, toolTitle: title }
       else messages.push({ id: nextId(), role: 'system', text: label, toolCallId: event.id, toolTitle: title })
       const filesChangedAt = event.status === 'completed' ? Date.now() : state.filesChangedAt
@@ -126,19 +129,19 @@ function applyEvent(state, event) {
       return state.pendingPermission?.id === event.id ? { ...state, pendingPermission: null } : state
 
     case 'compact_started':
-      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: '🗜 Compression du contexte…' }] }
+      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: 'Compression du contexte…' }] }
 
     case 'mode_update':
       return { ...state, modeId: event.modeId, availableModes: event.availableModes ?? state.availableModes }
 
     case 'model_update':
-      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: `🔀 Modèle changé pour ${event.model}` }], model: event.model }
+      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: `Modèle changé : ${event.model}` }], model: event.model }
 
     case 'error':
       // Ex. cwd refusé côté serveur (hors projects.json) sur new_session/
       // resume_project — sans ça, l'échec était totalement silencieux pour
       // l'utilisateur (l'event arrivait bien, mais rien ne le traitait).
-      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: `⚠ ${event.message}` }] }
+      return { ...state, messages: [...state.messages, { id: nextId(), role: 'system', text: event.message }] }
 
     default:
       return state

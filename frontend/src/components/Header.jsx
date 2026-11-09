@@ -17,7 +17,7 @@ export const PANEL_META = {
   terminal: { icon: 'terminal', label: 'Terminal' },
 }
 const PANEL_ORDER = ['chat', 'files', 'terminal']
-const CONFIRM_PERTE = 'La conversation en cours sera perdue. Continuer ?'
+const CONFIRM_PERTE = 'Quitter la conversation en cours ?'
 
 function useProjects(enabled) {
   const [projects, setProjects] = useState([])
@@ -60,7 +60,7 @@ function ProjectSwitcher() {
 
   async function handleSelect(path) {
     setOpen(false)
-    if (messages.length > 0 && !(await confirm(CONFIRM_PERTE))) return
+    if (messages.length > 0 && !(await confirm(CONFIRM_PERTE, { action: 'Changer de projet' }))) return
     // Reprend la session la plus récente de ce dossier si elle existe (voir
     // agent_bridge.py resume_session) — pas un simple "new_session" vierge.
     resumeProject(path)
@@ -97,7 +97,7 @@ function MobileHeaderMenu() {
 
   async function handleSelect(path) {
     setOpen(false)
-    if (messages.length > 0 && !(await confirm(CONFIRM_PERTE))) return
+    if (messages.length > 0 && !(await confirm(CONFIRM_PERTE, { action: 'Changer de projet' }))) return
     resumeProject(path)
   }
 
@@ -142,9 +142,9 @@ export default function Header({ activePanel, setActivePanel }) {
         {gpu?.percent != null && (
           <span
             className={`badge cut gpu-widget ${gpu.warning ? 'bg-hi gpu-warning' : 'bg-neu'}`}
-            data-tip={`VRAM ${gpu.used} / ${gpu.total} Mio · GPU ${gpu.utilization} %`}
+            data-tip={`VRAM ${gpu.used} / ${gpu.total} Mio · GPU ${gpu.utilization} %`}
           >
-            {gpu.warning && <Icone nom="attention" />}VRAM {gpu.percent} %
+            {gpu.warning && <Icone nom="attention" />}VRAM {gpu.percent} %
           </span>
         )}
         <span className={`badge cut status-badge ${connected ? 'bg-lo' : 'bg-md'}`}>

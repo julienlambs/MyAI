@@ -56,7 +56,7 @@ function PdfPreview({ url }) {
     return () => { cancelled = true }
   }, [pageNum, numPages])
 
-  if (error) return <div className="preview-error"><Icone nom="erreur" /> Aperçu PDF impossible : {error}</div>
+  if (error) return <div className="preview-error"><Icone nom="erreur" /> Aperçu PDF impossible.</div>
 
   return (
     <div className="pdf-preview">
@@ -112,13 +112,13 @@ function TextPreview({ preview, gitStatus, root }) {
         <>
           {diffLoading && <div className="preview-loading">Chargement du diff…</div>}
           {!diffLoading && diffError && <div className="preview-error"><Icone nom="erreur" /> {diffError}</div>}
-          {!diffLoading && !diffError && diff?.binary && <div className="preview-error">Diff indisponible : fichier binaire.</div>}
+          {!diffLoading && !diffError && diff?.binary && <div className="preview-error">Diff indisponible : fichier binaire.</div>}
           {!diffLoading && !diffError && diff && !diff.binary && <DiffView diff={diff} />}
         </>
       ) : (
         <>
           <pre className="preview-text">{preview.content}</pre>
-          {preview.truncated && <div className="preview-truncated">Aperçu tronqué : fichier trop volumineux pour un aperçu complet.</div>}
+          {preview.truncated && <div className="preview-truncated">Aperçu tronqué : fichier trop volumineux pour un aperçu complet.</div>}
         </>
       )}
     </div>
@@ -147,7 +147,7 @@ export default function FilePreview({ preview, gitStatus, root }) {
   if (preview.loading) return <div className="file-preview preview-loading">Chargement…</div>
   if (preview.error) return <div className="file-preview preview-error"><Icone nom="erreur" /> {preview.error}</div>
   if (preview.kind === 'unsupported') {
-    return <div className="file-preview preview-error">Aperçu indisponible : fichier binaire non reconnu.</div>
+    return <div className="file-preview preview-error">Aperçu indisponible : fichier binaire non reconnu.</div>
   }
 
   return <TextPreview preview={preview} gitStatus={gitStatus} root={root} />
