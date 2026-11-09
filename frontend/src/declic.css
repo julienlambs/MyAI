@@ -1,7 +1,7 @@
-/* Le Déclic 1.21.0, copié le 08/11/2026 dans MyAI — sans Tailwind : @import "tailwindcss", @source et @theme retirés ;
+/* Le Déclic 1.21.1, copié le 10/11/2026 dans MyAI — sans Tailwind : @import "tailwindcss", @source et @theme retirés ;
    sans texte long : @import quattro.css retiré. Ne rien retoucher ici : les surcharges vont dans index.css. */
 /* ═══════════════════════════════════════════════════════════════════════════
-   Design system — charte « Le Déclic » 1.21.0 (08/11/2026 ; charte validée le 29/10/2026)
+   Design system — charte « Le Déclic » 1.21.1 (09/11/2026 ; charte validée le 29/10/2026)
    Version et changements : CHANGELOG.md. Dans une app, noter ici la version copiée et la date.
    Tokens + briques CSS. Copier ce fichier ET le dossier fonts/ dans le projet ;
    adapter le chemin de declic.css ci-dessous si fonts/ n'est pas à côté.
