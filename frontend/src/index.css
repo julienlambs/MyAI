@@ -153,6 +153,8 @@ body { overflow: hidden; }
 
 .composer { --c: var(--c-inp); --f: var(--bg); display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-2) var(--s-3); transition: border-color var(--dh) var(--ease); }
 .composer.drag-over { --trait: var(--acc); }
+/* Le textarea n'a pas de contour propre : le focus se voit sur le trait du composeur (couleur du viseur). */
+.composer:focus-within { --trait: var(--focus); }
 .composer textarea { width: 100%; resize: none; background: transparent; border: none; outline: none; color: var(--text); font: inherit; font-size: var(--t-sm); line-height: 1.5; padding: var(--s-1); box-sizing: border-box; overflow-y: auto; }
 .composer textarea::placeholder { color: var(--muted); opacity: 1; }
 .composer-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
@@ -172,6 +174,7 @@ body { overflow: hidden; }
 .files-search { flex: 1; min-width: 160px; }
 .files-search .field { margin-bottom: 0; }
 .tree { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-2); outline: none; }
+.tree:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; } /* l'arbre se parcourt aux flèches : son focus doit se voir */
 .tree-error { padding: var(--s-3); }
 /* Hauteur fixe : la virtualisation de l'arbre calcule les positions par index (ROW_HEIGHT dans FilesPanel.jsx). */
 .tree-row { --c: var(--c-row); display: flex; align-items: center; gap: var(--s-2); padding: 0 var(--s-3); height: 28px; box-sizing: border-box; cursor: pointer; font-size: var(--t-sm); transition: background var(--dh) var(--ease); }

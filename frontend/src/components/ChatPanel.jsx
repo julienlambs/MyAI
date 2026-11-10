@@ -458,7 +458,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
             </div>
             <div className="section-actions">
               {variant !== 'full' && (
-                <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
+                <IconBtn className="bw vfw ibtn" kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
               )}
               <Btn
                 kind="ghost"
@@ -480,7 +480,7 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
               </Btn>
               <SessionHistory cwd={cwd} />
               <div className="mobile-menu-wrap">
-                <IconBtn kind="ghost" ref={mobileMenuRef} label="Plus d’options" icon={<Icone nom="plus-options" />}
+                <IconBtn className="bw vfw ibtn" kind="ghost" ref={mobileMenuRef} label="Plus d’options" icon={<Icone nom="plus-options" />}
                   aria-haspopup="menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
                 <MenuPop anchorRef={mobileMenuRef} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}
                   width="panel" label="Options du chat">

@@ -278,17 +278,17 @@ export default function TerminalPanel({ variant, gridArea, onActivate }) {
                     <Icone nom="terminal" />{tab.name}
                   </button>
                   {tabs.length > 1 && (
-                    <IconBtn kind="ghost" label={`Fermer ${tab.name}`} icon={<Icone nom="fermer" />}
+                    <IconBtn className="bw vfw ibtn" kind="ghost" label={`Fermer ${tab.name}`} icon={<Icone nom="fermer" />}
                       onClick={(e) => handleCloseTab(tab.id, e)} />
                   )}
                 </div>
               ))}
             </div>
-            <IconBtn kind="ghost" label="Nouveau terminal" icon={<Icone nom="ajouter" />} onClick={handleNewTab} />
+            <IconBtn className="bw vfw ibtn" kind="ghost" label="Nouveau terminal" icon={<Icone nom="ajouter" />} onClick={handleNewTab} />
           </div>
           <div className="section-actions">
             {variant !== 'full' && (
-              <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
+              <IconBtn className="bw vfw ibtn" kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
             )}
             <Btn kind="ghost" className="term-send" icon={<Icone nom="envoyer" />} onClick={handleSendSelectionToChat}
               aria-label="Envoyer au chat" data-tip="Envoyer le texte sélectionné dans le terminal au chat">

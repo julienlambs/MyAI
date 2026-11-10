@@ -37,7 +37,7 @@ function MobilePanelSwitcher({ activePanel, setActivePanel }) {
   return (
     <div className="mobile-panel-switch">
       {others.map((id) => (
-        <IconBtn
+        <IconBtn className="bw vfw ibtn"
           key={id}
           kind="ghost"
           label={`Ouvrir ${PANEL_META[id].label}`}
@@ -105,7 +105,7 @@ function MobileHeaderMenu() {
 
   return (
     <div className="mobile-menu-wrap">
-      <IconBtn kind="ghost" ref={btnRef} label="Menu de l’application" icon={<Icone nom="menu" />}
+      <IconBtn className="bw vfw ibtn" kind="ghost" ref={btnRef} label="Menu de l’application" icon={<Icone nom="menu" />}
         aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)} />
       <MenuPop anchorRef={btnRef} open={open} onClose={() => setOpen(false)} label="Menu de l’application" width={260}>
         <MenuItem icon={mode === 'dark' ? 'soleil' : 'lune'} label={mode === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
@@ -151,10 +151,11 @@ export default function Header({ activePanel, setActivePanel }) {
           <Icone nom={connected ? 'succes' : 'attention'} />{connected ? 'En ligne' : 'Reconnexion'}
         </span>
         <span className="kbd-hint"><Touche>Ctrl 1</Touche> Chat <Touche>Ctrl 2</Touche> Fichiers <Touche>Ctrl 3</Touche> Terminal</span>
-        {/* IconBtn remplace son className par le sien : la classe de mise en page va sur un enveloppant */}
+        {/* IconBtn remplace son className par le sien (d'où className="bw vfw ibtn" partout : sans .ibtn, pas de cible
+            de 44 px au doigt, défaut connu du paquet relevé sur Pulse) ; la classe de mise en page va sur un enveloppant */}
         <span className="header-desktop-only header-icons">
           {push.supported && (
-            <IconBtn
+            <IconBtn className="bw vfw ibtn"
               kind="ghost"
               disabled={push.busy}
               onClick={() => (push.subscribed ? push.unsubscribe() : push.subscribe())}
@@ -162,7 +163,7 @@ export default function Header({ activePanel, setActivePanel }) {
               icon={<Icone nom={push.subscribed ? 'cloche' : 'cloche-barree'} />}
             />
           )}
-          <IconBtn
+          <IconBtn className="bw vfw ibtn"
             kind="ghost"
             onClick={toggle}
             label={mode === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre'}
