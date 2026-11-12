@@ -23,7 +23,7 @@ body { overflow: hidden; }
 .shell { position: relative; z-index: var(--z-dessus); display: flex; flex-direction: column; width: 100%; height: 100vh; height: 100dvh; min-height: 0; }
 
 .header {
-  position: relative; z-index: var(--z-collant); height: 56px; flex-shrink: 0;
+  position: relative; z-index: var(--z-collant); height: var(--barre-h); flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding: 0 var(--s-6);
   background: color-mix(in oklab, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
 }
@@ -281,7 +281,7 @@ body { overflow: hidden; }
 
   /* En-tête global très compact : logo + statut + un seul menu, le sous-titre
      et les badges secondaires passent dans le menu mobile (voir Header.jsx). */
-  .header { height: 48px; padding: 0 var(--s-3); gap: var(--s-2); }
+  .header { padding: 0 var(--s-3); gap: var(--s-2); }
   .header-right { gap: var(--s-2); }
   .brand .path { display: none; }
   .kbd-hint { display: none; }

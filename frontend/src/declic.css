@@ -1,7 +1,7 @@
-/* Le Déclic 1.21.1, copié le 10/11/2026 dans MyAI — sans Tailwind : @import "tailwindcss", @source et @theme retirés ;
+/* Le Déclic 1.22.0, copié le 12/11/2026 dans MyAI — sans Tailwind : @import "tailwindcss", @source et @theme retirés ;
    sans texte long : @import quattro.css retiré. Ne rien retoucher ici : les surcharges vont dans index.css. */
 /* ═══════════════════════════════════════════════════════════════════════════
-   Design system — charte « Le Déclic » 1.21.1 (09/11/2026 ; charte validée le 29/10/2026)
+   Design system — charte « Le Déclic » 1.22.0 (12/11/2026 ; charte validée le 29/10/2026)
    Version et changements : CHANGELOG.md. Dans une app, noter ici la version copiée et la date.
    Tokens + briques CSS. Copier ce fichier ET le dossier fonts/ dans le projet ;
    adapter le chemin de declic.css ci-dessous si fonts/ n'est pas à côté.
@@ -70,6 +70,7 @@
 
   /* échelle typo : base 16, ratio 1.2 à 390 px → 1.33 à 1200 px */
   --t-xs: 13px; --t-sm: 14px; --t-base: 16px;
+  --saira-w: 110%; /* largeur de Saira (texte et interface) ; 100 % en densité outil */
   --t-lg:  clamp(19px, calc(19px +  2 * (100vw - 390px) / 810), 21px);
   --t-xl:  clamp(23px, calc(23px +  5 * (100vw - 390px) / 810), 28px);
   --t-2xl: clamp(28px, calc(28px + 10 * (100vw - 390px) / 810), 38px);
@@ -90,6 +91,10 @@
      s'écrivent en clair. < 600 téléphone ; 600 à 839 pliant déplié (698 px) et petite tablette ; ≥ 840 tablette
      paysage et ordinateur. La taille des cibles suit (pointer: coarse), pas la largeur. */
   --bh: 36px; /* hauteur des boutons (zone tactile portée à 44 px sur écran tactile) */
+  --barre-h: 56px;  /* barre du haut (.bh) */
+  --saisie-h: 48px; --saisie-bh: 38px; /* barre de saisie (.sbar) : champ, bouton d'envoi */
+  --ligne-h: 34px;  /* ligne d'arborescence (.arbre-r) ; au doigt : --ligne-tap, sinon --tap */
+  --tap: 44px; /* zone tactile minimale au doigt (pointer: coarse) : boutons, lignes, onglets ; 36 px en densité outil */
   /* tailles réglées par la densité (voir « Densité compacte » plus bas) */
   --bpx: var(--s-4);     /* marge intérieure des boutons */
   --fh: 50px;      /* champ à étiquette flottante, et menu déroulant sans étiquette au-dessus */
@@ -134,6 +139,23 @@
   --field-mb: var(--s-3); --card-p: var(--s-3); --opt-my: var(--s-2);
 }
 
+/* ── Densité outil : <html data-density="outil"> (1.22.0, specs/densite-outil.md) ─────────
+   Pour les interfaces de type outil sur tablette (panneaux, explorateur, terminal : MyAI). Plus serré que compact :
+   texte 14 / 13 / 13 px (plancher de 13 px gardé), Saira à 100 %, boutons de 28 px, zone tactile de 36 px au doigt
+   (WCAG 2.5.8 : 24 px), lignes d'arborescence à 28 px même au doigt (la ligne fait toute la largeur). */
+:root[data-density="outil"] {
+  --tap: 36px; --bh: 28px; --bpx: var(--s-2); --fh: 40px; --fh-top: 32px; --fpt: 12px; --flt-up: 3px;
+  --field-mb: var(--s-2); --card-p: var(--s-2); --opt-my: var(--s-1);
+  --t-base: 14px; --t-sm: 13px; --t-xs: 13px; --t-lg: 16px; --t-xl: 18px; --t-2xl: 22px;
+  --saira-w: 100%;
+  --barre-h: 44px; --saisie-h: 36px; --saisie-bh: 28px; --ligne-h: 28px; --ligne-tap: 28px;
+}
+:root[data-density="outil"] .seg > button { height: calc(var(--bh) - 6px); }
+@media (pointer: coarse) {
+  :root[data-density="outil"] { --fh-top: var(--tap); } /* champ à étiquette au-dessus et ses boutons (calendrier, ±) : 36 px au doigt, pas 32 */
+  :root[data-density="outil"] .seg > button { height: calc(var(--tap) - 6px); }
+}
+
 /* ── Thème clair : <html data-theme="light"> (cf. themes.js) ─────────────── */
 :root[data-theme="light"] {
   --bg: #F3F7FE; --card: #FDFDFF; --card2: #E9F0FE; --border: #D2DFF6; --borderHi: #BDCBE5; --edgeStrong: #8394B5;
@@ -162,14 +184,13 @@
   --kunai-bas-fin-plein: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10.58'%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0 Z' fill='%233A74F0'/%3E%3Cpath d='M2.5 0 L2.5 1.5 L0.5 2.65 L4.5 9.58 L8.5 2.65 L6.5 1.5 L6.5 0' fill='none' stroke='%233A74F0' stroke-width='1' stroke-linejoin='miter' stroke-miterlimit='4'/%3E%3C/svg%3E");
 }
 
-
 /* ── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
 * { box-sizing: border-box; }
 html, body, #root { min-height: 100%; margin: 0; padding: 0; }
 body {
   background: var(--bg); color: var(--text);
-  font: var(--t-base)/1.55 'Saira', system-ui, sans-serif; font-stretch: 110%;
+  font: var(--t-base)/1.55 'Saira', system-ui, sans-serif; font-stretch: var(--saira-w);
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
 a { color: var(--link); }
@@ -242,16 +263,17 @@ h1, h2, h3, .font-title { font-family: 'Déclic', sans-serif; margin: 0; }
 .bw { --hp: 0px; position: relative; display: inline-block; box-sizing: border-box; cursor: pointer; --c: var(--c-btn);
   padding: var(--hp) 0; margin: calc(var(--hp) * -1) 0; -webkit-tap-highlight-color: transparent;
   transition: filter var(--dh) var(--ease), transform var(--dh) var(--ease); }
-@media (pointer: coarse) { .bw { --hp: calc((44px - var(--bh)) / 2); } }
+@media (pointer: coarse) { .bw { --hp: calc((var(--tap) - var(--bh)) / 2); } }
 .bw > .vf { inset: calc(var(--hp) - var(--t)) calc(var(--t) * -1); }
 /* bouton à icône seule : carré de --bh ; au toucher il s'élargit aussi à 44 px, comme en hauteur (règle 9, 03/11/2026) */
 .ibtn { --wp: 0px; padding-inline: var(--wp); margin-inline: calc(var(--wp) * -1); }
-@media (pointer: coarse) { .ibtn { --wp: calc((44px - var(--bh)) / 2); } }
+@media (pointer: coarse) { .ibtn { --wp: calc((var(--tap) - var(--bh)) / 2); } }
 .ibtn .b > span { padding: 0; width: calc(var(--bh) - 2px); }
 .ibtn > .vf { inset: calc(var(--hp) - var(--t)) calc(var(--wp) - var(--t)); }
+svg.ic { fill: currentColor; stroke: none; flex: none; } /* icônes de la charte (icones/) : couleur du texte */
 .b { display: block; padding: 1px; background: var(--bb); }
 .b > span { display: flex; align-items: center; justify-content: center; gap: var(--s-2); height: calc(var(--bh) - 2px); padding: 0 var(--bpx);
-  background: var(--bf); color: var(--bt); font: 500 var(--t-sm)/1 'Saira', sans-serif; font-stretch: 110%; white-space: nowrap;
+  background: var(--bf); color: var(--bt); font: 500 var(--t-sm)/1 'Saira', sans-serif; font-stretch: var(--saira-w); white-space: nowrap;
   transition: background var(--dh) var(--ease), color var(--dh) var(--ease); }
 .b.pri   { --bb: var(--pri); --bf: var(--pri); --bt: #fff; }
 .b.sec   { --bb: var(--stroke); --bf: var(--secBg); --bt: var(--text); }
@@ -316,9 +338,9 @@ declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; 
 .opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 /* toucher : la ligne entière (case + libellé) est la cible ; une zone invisible de 44 px de haut (le ::before appartient
    au label, donc le toucher coche la case) sans décaler la mise en page (02/11/2026) */
-@media (pointer: coarse) { .opt { position: relative; } .opt::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); } }
+@media (pointer: coarse) { .opt { position: relative; } .opt::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: var(--tap); transform: translateY(-50%); } }
 /* …et des lignes de 44 px, sinon les zones de deux options voisines se chevauchent (31 px utiles, 27 en compact ; règle 9, 03/11/2026) */
-@media (pointer: coarse) { .opt { min-height: 44px; margin: 0; } }
+@media (pointer: coarse) { .opt { min-height: var(--tap); margin: 0; } }
 .ctlw { --c: var(--c-tab); display: inline-flex; flex: none; }
 .ctlw.hexw { --c: 0px; }
 .box { width: 20px; height: 20px; padding: 1px; background: var(--stroke); transition: background var(--dh) var(--ease); }
@@ -365,7 +387,7 @@ declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; 
 .liw:hover > .li > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); }
 .liw[aria-selected="true"] > .li { background: var(--selBd); }
 .liw[aria-selected="true"] > .li > .in { --f: var(--selBg); }
-@media (pointer: coarse) { .liw > .li > .in { min-height: 44px; box-sizing: border-box; } }
+@media (pointer: coarse) { .liw > .li > .in { min-height: var(--tap); box-sizing: border-box; } }
 .stagger > * { animation: rise 300ms var(--ease) backwards; }
 .stagger > :nth-child(2) { animation-delay: 80ms; } .stagger > :nth-child(3) { animation-delay: 160ms; }
 .stagger > :nth-child(4) { animation-delay: 240ms; } .stagger > :nth-child(5) { animation-delay: 320ms; }
@@ -411,7 +433,7 @@ declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; 
   .lr-act { justify-content: space-between; margin-top: var(--s-2); }
 }
 /* cibles de 44 px au toucher, quelle que soit la largeur (pliant déplié compris) ; même poids que .lr-act button, sinon les 24 px gagnent */
-@media (pointer: coarse) { .lr-act > button, .lr-act > a { min-height: 44px; } }
+@media (pointer: coarse) { .lr-act > button, .lr-act > a { min-height: var(--tap); } }
 .lrs.compact { gap: var(--s-2); }
 .compact .lr { --c: 6px; }
 .compact .lr > .in { padding: 0 var(--s-4); }
@@ -426,7 +448,7 @@ declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; 
 .tabs button[aria-selected="true"] { color: var(--text); }
 /* focus au clavier : contour à l'intérieur (.tabs défile en largeur, un contour extérieur serait rogné) ; 44 px au toucher (règle 9, 03/11/2026) */
 .tabs button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -1.5px; }
-@media (pointer: coarse) { .tabs button { display: inline-flex; align-items: center; box-sizing: border-box; min-height: 44px; } }
+@media (pointer: coarse) { .tabs button { display: inline-flex; align-items: center; box-sizing: border-box; min-height: var(--tap); } }
 .tabs .ind { position: absolute; bottom: 0; height: 2.5px; background: var(--acc); clip-path: polygon(1.44px 0, calc(100% - 1.44px) 0, 100% 100%, 0 100%);
   transition: left var(--d) var(--ease), width var(--d) var(--ease); }
 
@@ -593,10 +615,10 @@ declic-loader:not(:defined)::before { content: ''; display: block; width: 12px; 
 
 .sbar { --c: var(--c-inp); display: block; }
 .sbar .cs > .in { gap: var(--s-2); padding-right: var(--s-1); }
-.sbar input { flex: 1; min-width: 0; height: 48px; padding: 0 var(--s-4); }
+.sbar input { flex: 1; min-width: 0; height: var(--saisie-h); padding: 0 var(--s-4); }
 .sbar input::placeholder { color: var(--muted); opacity: 1; }
-.sbar .bw { --bh: 38px; --bpx: var(--s-4); --c: 4.5px; flex: none; }
-.sbar .bw .b > span { width: 56px; padding: 0; font-size: var(--t-lg); } /* largeur fixe : le bouton ne bouge pas pendant l'envoi */
+.sbar .bw { --bh: var(--saisie-bh); --bpx: var(--s-4); --c: 4.5px; flex: none; }
+.sbar .bw .b > span { width: calc(var(--saisie-bh) + 18px); padding: 0; font-size: var(--t-lg); } /* largeur fixe : le bouton ne bouge pas pendant l'envoi */
 .sbar.busy { pointer-events: none; }
 .sbar.busy input { opacity: .4; } /* le bouton reste plein : il porte l'animation d'envoi */
 /* erreurs (03/11/2026, choix C de Julien, specs/gestes-et-saisie.md) :
@@ -658,7 +680,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .dd-ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
 .dd-opt { --c: var(--c-row); padding: 1px; background: transparent; cursor: pointer; }
 .dd-opt > .in { display: flex; align-items: center; gap: var(--s-3); min-height: 38px; padding: 0 var(--s-3); font-size: var(--t-base); background: var(--f, transparent); transition: background var(--dh) var(--ease); }
-@media (pointer: coarse) { .dd-opt > .in { min-height: 44px; } }
+@media (pointer: coarse) { .dd-opt > .in { min-height: var(--tap); } }
 .dd-opt.act { background: var(--stroke); }
 .dd-opt.act > .in { --f: color-mix(in oklab, var(--card2), var(--borderHi) 50%); } /* survol et flèches : le même état « actif » */
 .dd-opt[aria-selected="true"] { background: var(--selBd); } /* la valeur choisie reprend le bloc de .li.sel */
@@ -683,7 +705,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .am .dd-opt.dan > .in, .am .dd-opt.dan svg, .amf .dd-opt.dan > .in, .amf .dd-opt.dan svg { color: var(--hi); }
 .am .sep, .amf .sep { height: 1px; margin: var(--s-1) var(--s-2); background: var(--stroke); }
 .am .grp, .amf .grp { padding: var(--s-2) var(--s-3) var(--s-1); font-size: var(--t-xs); color: var(--muted); }
-.am kbd { margin-left: auto; font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
+.am kbd { margin-left: auto; font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: var(--saira-w); --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
 .amf { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-surface); padding: 0 var(--s-2) env(safe-area-inset-bottom, 0px); }
 .amf > div { max-width: 560px; margin: 0 auto; }
 .amf .sheet > .in { --f: var(--card2); padding: var(--s-3) var(--s-3) var(--s-4); }
@@ -738,7 +760,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .cal-g button.hors { color: var(--muted); opacity: .5; }
 .cal-g button.auj { color: var(--link); font-weight: 600; }
 .cal-g button[aria-selected="true"] { background: var(--pri); color: #fff; }
-@media (pointer: coarse) { .cal-g button { height: 44px; } }
+@media (pointer: coarse) { .cal-g button { height: var(--tap); } }
 
 /* ── Tableau (04/11/2026, 1.6.0, specs/tableau.md) ──────────────────────────────
    .tab-z (défile de côté sur écran étroit, 1re colonne fixe) > table.tab ; th[data-tri] > button (tri par composants.js, aria-sort) ;
@@ -761,7 +783,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .tab th[aria-sort="descending"] .tri { transform: rotate(180deg); }
 .tab .act { width: 1%; padding-block: 2px; }
 .tab .ibtn { --bh: 32px; }
-@media (pointer: coarse) { .tab th button { min-height: 44px; min-width: 44px; } .tab .ibtn { --bh: 36px; } .tab .act { padding-block: var(--s-1); } } /* la coupe de la cellule rognerait la zone de 44 px */
+@media (pointer: coarse) { .tab th button { min-height: var(--tap); min-width: var(--tap); } .tab .ibtn { --bh: 36px; } .tab .act { padding-block: var(--s-1); } } /* la coupe de la cellule rognerait la zone de 44 px */
 
 /* ── Navigation de l’app (05/11/2026, 1.10.0, specs/navigation.md) ─────────────────
    Selon la largeur : barre du bas sur téléphone (< 600 px), rail de 600 à 839 px, menu latéral déplié à partir de 840 px ;
@@ -770,7 +792,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
    Menu latéral : nav.ml > .ml-tete (logo + .ml-nom) + .ml-grp (titre de groupe) + a.ml-it.vfw[aria-current="page"]
                   > span.ml-in.cut > svg.ic + span.ml-lab, + viseur ; .ml.rail force le rail, .ml.ouvert le menu déplié
    Barre du bas : nav.bb > a.bb-it[aria-current="page"] (ou button) > span.bb-ic > svg.ic (+ .pas) + span.bb-lab ; 3 à 5 onglets */
-.bh { position: sticky; top: 0; z-index: var(--z-collant); display: flex; align-items: center; gap: var(--s-2); box-sizing: border-box; min-height: 56px;
+.bh { position: sticky; top: 0; z-index: var(--z-collant); display: flex; align-items: center; gap: var(--s-2); box-sizing: border-box; min-height: var(--barre-h);
   padding: env(safe-area-inset-top, 0px) var(--s-2) 0 var(--s-3); background: var(--card); border-bottom: 1px solid var(--stroke); }
 .bh-titre { margin: 0 0 0 var(--s-1); min-width: 0; font: 600 var(--t-lg)/1.2 'Déclic', 'Saira', sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bh-esp { flex: 1; }
@@ -795,7 +817,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
   clip-path: polygon(0 0, 100% 1.44px, 100% calc(100% - 1.44px), 0 100%); transform: scaleY(0); transition: transform var(--d) var(--ease); }
 .ml-it[aria-current="page"]::before { transform: none; }
 .ml-lab, .ml-grp, .ml-nom { transition: opacity var(--dh) var(--ease); }
-@media (pointer: coarse) { .ml-in { height: 44px; } }
+@media (pointer: coarse) { .ml-in { height: var(--tap); } }
 /* rail : icônes seules ; largeur = 2 × (marge + retrait) + icône + trait */
 .ml.rail { width: calc(2 * (var(--s-2) + var(--s-3)) + 21px); }
 .ml.rail :is(.ml-lab, .ml-grp, .ml-nom) { opacity: 0; pointer-events: none; }
@@ -844,7 +866,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
    span.pas.cut dans un parent en position: relative (bouton-icône, onglet) : nombre de nouveautés, 99+ au-delà.
    Le nombre est aussi dans l'aria-label du parent (« Alertes, 3 nouvelles ») : la pastille, elle, est aria-hidden. */
 .pas { --c: 2px; position: absolute; z-index: var(--z-viseur); top: 2px; right: 2px; box-sizing: border-box; display: grid; place-items: center; min-width: 16px; height: 16px; padding: 0 3px;
-  background: var(--pri); color: #fff; font: 600 11px/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; pointer-events: none; }
+  background: var(--pri); color: #fff; font: 600 11px/1 'Saira', sans-serif; font-stretch: var(--saira-w); font-variant-numeric: tabular-nums; pointer-events: none; }
 .bb-ic > .pas { top: -1px; right: var(--s-1); } /* assez à droite pour laisser voir l'icône (les trois points de « Plus ») */
 
 /* ── Curseur (05/11/2026, 1.12.0, specs/curseur.md) ────────────────────────────────
@@ -856,7 +878,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .cur-tete .lbl { margin: 0; }
 .cur-val { font-size: var(--t-sm); font-weight: 500; color: var(--link); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cur { --p0: 0%; --p1: 0%; position: relative; height: 32px; }
-@media (pointer: coarse) { .cur { height: 44px; } }
+@media (pointer: coarse) { .cur { height: var(--tap); } }
 .cur-rail { position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); pointer-events: none;
   background: linear-gradient(90deg, var(--borderHi) var(--p0), var(--pri) var(--p0), var(--pri) var(--p1), var(--borderHi) var(--p1)); }
 .cur input { -webkit-appearance: none; appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: none; outline: none; pointer-events: none; }
@@ -896,7 +918,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .seg > button:hover, .seg > button[aria-checked="true"] { color: var(--text); }
 .seg > button:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; }
 .seg > button > svg { width: 16px; height: 16px; flex: none; fill: currentColor; }
-@media (pointer: coarse) { .seg > button { height: 38px; } }
+@media (pointer: coarse) { .seg > button { height: calc(var(--tap) - 6px); } } /* 38 px : avec les 3 px du cadre, la zone fait --tap */
 .seg-bloc { --c: var(--c-btn); position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; background: var(--secBg); pointer-events: none;
   transition: transform var(--d) var(--ease), width var(--d) var(--ease); }
 /* sans le script : le fond sous l'option choisie, sans glissement */
@@ -922,11 +944,11 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .dd-vide { padding: var(--s-3); font-size: var(--t-sm); color: var(--muted); list-style: none; }
 .pop-cherche { padding: var(--s-1) var(--s-1) var(--s-2); }
 .pop-cherche .fw input.rech { height: 38px; padding-top: 0; }
-@media (pointer: coarse) { .pop-cherche .fw input.rech { height: 44px; } }
+@media (pointer: coarse) { .pop-cherche .fw input.rech { height: var(--tap); } }
 .pop-pied { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); margin-top: var(--s-1); padding: var(--s-2) var(--s-2) 0; border-top: 1px solid var(--stroke); font-size: var(--t-xs); color: var(--muted); }
 .pop-fini { all: unset; cursor: pointer; color: var(--link); font-size: var(--t-sm); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 .pop-fini:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
-@media (pointer: coarse) { .pop-fini { min-height: 44px; display: inline-flex; align-items: center; } }
+@media (pointer: coarse) { .pop-fini { min-height: var(--tap); display: inline-flex; align-items: center; } }
 /* choix multiple : la case de la charte (.box) dans la ligne, pas de fond « choisi » (c'est la case qui le dit) */
 .dd-opt .box { width: 18px; height: 18px; flex: none; }
 .dd-ul[aria-multiselectable="true"] .dd-opt[aria-selected="true"] { background: transparent; }
@@ -985,7 +1007,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .ban-act { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); margin-top: var(--s-1); }
 .ban-act :is(a, button) { all: unset; cursor: pointer; color: var(--link); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
 .ban-act :is(a, button):focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
-@media (pointer: coarse) { .ban-act :is(a, button) { min-height: 44px; display: inline-flex; align-items: center; } }
+@media (pointer: coarse) { .ban-act :is(a, button) { min-height: var(--tap); display: inline-flex; align-items: center; } }
 .ban-x { --bh: 28px; margin: calc(var(--s-1) * -1) calc(var(--s-1) * -1) 0 0; }
 .ban[hidden] { display: none; }
 
@@ -1044,7 +1066,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
    span.av[.s 28 | (40) | .l 56][style="--k: var(--g3)"][role=img][aria-label] > span.av-ini (ou img) + span.av-st (en ligne)
    Groupe : .avs[role=group][aria-label] > .av… + span.av.av-plus (« +2 »). */
 .av { --t: 40px; --k: var(--g1); --c: calc(var(--t) * .16); position: relative; flex: none; display: inline-grid; place-items: center; width: var(--t); height: var(--t);
-  font: 600 calc(var(--t) * .36)/1 'Saira', sans-serif; font-stretch: 110%; color: var(--k); vertical-align: middle; }
+  font: 600 calc(var(--t) * .36)/1 'Saira', sans-serif; font-stretch: var(--saira-w); color: var(--k); vertical-align: middle; }
 .av.s { --t: 28px; } .av.l { --t: 56px; }
 .av::before, .av::after { content: ''; position: absolute; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
 .av::before { inset: 0; background: var(--k); }
@@ -1079,7 +1101,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 
 /* ── Touche clavier (06/11/2026, 1.15.0, specs/touche.md) ──────────────────────────
    Piste B : contour fin de la charte, fond de carte. kbd.kb.cut > span.cut2 ; « + » entre deux touches : span.kb-plus */
-.kb { --c: 2.7px; display: inline-flex; vertical-align: .05em; height: 1.65em; min-width: 1.65em; padding: 1px; box-sizing: border-box; background: var(--stroke); font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; white-space: nowrap; }
+.kb { --c: 2.7px; display: inline-flex; vertical-align: .05em; height: 1.65em; min-width: 1.65em; padding: 1px; box-sizing: border-box; background: var(--stroke); font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: var(--saira-w); white-space: nowrap; }
 .kb > span { flex: 1; display: inline-flex; align-items: center; justify-content: center; padding: 0 .45em; background: var(--card); color: var(--text); }
 .kb-plus { margin: 0 2px; font-size: var(--t-xs); color: var(--muted); }
 
@@ -1100,7 +1122,7 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .pagi-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2); font-size: var(--t-xs); color: var(--muted); }
 .pagi-pied output { font-variant-numeric: tabular-nums; }
 .pagi-pied .lbl { color: var(--muted); }
-@media (pointer: coarse) { .pagi .fw { --fh-top: 44px; } }
+@media (pointer: coarse) { .pagi .fw { --fh-top: var(--tap); } }
 
 /* ── Étapes (06/11/2026, 1.16.0, specs/etapes.md) ───────────────────────────────────
    Piste C : liste verticale, le contenu s'ouvre sous l'étape en cours. Hexagone numéroté : à venir gris, en cours contour bleu,
@@ -1121,16 +1143,16 @@ declic-envoi:not(:defined)::before { content: '↑'; font: 500 var(--t-lg)/1 'Sa
 .etape.ici .etape-hx { background: var(--acc); color: var(--link); }
 .etape.ici .etape-hx::before { background: var(--card); }
 .etape-h { align-self: center; margin: 0; font: inherit; } /* le titre (h2, h3…) n'est qu'une enveloppe : la forme est sur .etape-t */
-.etape-t { font: 400 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: 110%; color: var(--muted); }
+.etape-t { font: 400 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: var(--saira-w); color: var(--muted); }
 .etape.ici .etape-t, .etape.fait .etape-t { font-weight: 500; color: var(--text); }
-button.etape-t { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 26px; cursor: pointer; font: 500 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: 110%; }
+button.etape-t { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; min-height: 26px; cursor: pointer; font: 500 var(--t-sm)/1.4 'Saira', sans-serif; font-stretch: var(--saira-w); }
 button.etape-t:hover { color: var(--link); }
 button.etape-t:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 2px; }
 .etape-d { grid-column: 2; font-size: var(--t-xs); color: var(--muted); }
 .etape-c { grid-column: 2; min-width: 0; display: grid; gap: var(--s-3); margin-top: var(--s-2); }
 .etape:not(.ici) > .etape-c { display: none; }
 .etape-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); }
-@media (pointer: coarse) { button.etape-t { min-height: 44px; } }
+@media (pointer: coarse) { button.etape-t { min-height: var(--tap); } }
 
 /* ── Lien « aller au contenu » (06/11/2026, 1.16.0, specs/aller-au-contenu.md) ─────────
    Piste D (choix de Julien) : l'allure de A (bouton principal), le comportement de C : premier élément de la barre du haut,
@@ -1157,7 +1179,7 @@ button.etape-t:focus-visible { outline: 1.5px solid var(--focus); outline-offset
 .hr-pan[hidden] { display: none; }
 .hr-pan .pan { --c: var(--c-card); background: var(--edgeStrong); }
 .hr-pan .pan > .in { --f: var(--card2); padding: var(--s-3); display: grid; gap: var(--s-3); justify-items: center; }
-.hr-lec { display: flex; align-items: center; gap: var(--s-2); font: 600 var(--t-2xl)/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; }
+.hr-lec { display: flex; align-items: center; gap: var(--s-2); font: 600 var(--t-2xl)/1 'Saira', sans-serif; font-stretch: var(--saira-w); font-variant-numeric: tabular-nums; }
 .hr-lec > span { color: var(--muted); font-size: var(--t-lg); }
 :where(.hr-lec button) { all: unset; }
 .hr-lec button { --c: var(--c-row); box-sizing: border-box; min-width: 64px; padding: var(--s-1) var(--s-2); text-align: center; cursor: pointer; color: var(--muted); clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); }
@@ -1166,7 +1188,7 @@ button.etape-t:focus-visible { outline: 1.5px solid var(--focus); outline-offset
 .hr-cad { width: 240px; height: 240px; display: block; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .hr-face { fill: var(--card); stroke: var(--edgeStrong); stroke-width: 1; }
 .hr-grad { stroke: var(--borderHi); stroke-width: 1; }
-.hr-lb { font: 500 13px 'Saira', sans-serif; font-stretch: 110%; fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
+.hr-lb { font: 500 13px 'Saira', sans-serif; font-stretch: var(--saira-w); fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: central; font-variant-numeric: tabular-nums; }
 .hr-lb.in { font-size: 11px; fill: var(--muted); }
 .hr-lb.sur { fill: #fff; font-weight: 600; }
 .hr-aig { stroke: var(--acc); stroke-width: 2; }
@@ -1193,7 +1215,7 @@ button.etape-t:focus-visible { outline: 1.5px solid var(--focus); outline-offset
 .code-c:focus-within { background: var(--focus); }
 .field.err .code-c { background: var(--hi); }
 :where(.code-c > input) { all: unset; }
-.code-c > input { box-sizing: border-box; display: block; width: 100%; height: 52px; background: var(--card); text-align: center; font: 500 var(--t-xl)/1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; color: var(--text); caret-color: var(--link); }
+.code-c > input { box-sizing: border-box; display: block; width: 100%; height: 52px; background: var(--card); text-align: center; font: 500 var(--t-xl)/1 'Saira', sans-serif; font-stretch: var(--saira-w); font-variant-numeric: tabular-nums; color: var(--text); caret-color: var(--link); }
 input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 /* ── Chronologie (06/11/2026, 1.17.0, specs/chronologie.md) ──────────────────────────
@@ -1219,7 +1241,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
    par composants.js) + svg.ic + span.arbre-l + span.arbre-nb ; ul[role=group] > li… */
 .arbre, .arbre ul { list-style: none; margin: 0; padding: 0; }
 .arbre [role="treeitem"] { outline: none; }
-.arbre-r { position: relative; display: flex; align-items: center; gap: var(--s-2); min-height: 34px; padding: 0 var(--s-2) 0 calc(var(--n, 0) * 20px + 4px); font-size: var(--t-sm); cursor: pointer; }
+.arbre-r { position: relative; display: flex; align-items: center; gap: var(--s-2); min-height: var(--ligne-h); padding: 0 var(--s-2) 0 calc(var(--n, 0) * 20px + 4px); font-size: var(--t-sm); cursor: pointer; }
 .arbre-r::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: calc(var(--n, 0) * 20px); background: repeating-linear-gradient(90deg, transparent 0 10px, var(--stroke) 10px 11px, transparent 11px 20px); }
 .arbre-r:hover { background: linear-gradient(90deg, transparent calc(var(--n, 0) * 20px), var(--card2) calc(var(--n, 0) * 20px)); }
 .arbre-r > .ic { color: var(--muted); }
@@ -1240,7 +1262,28 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 [aria-checked="true"] > .arbre-r .arbre-cc, [aria-checked="mixed"] > .arbre-r .arbre-cc, [aria-checked="true"] > .arbre-r .arbre-cc::before, [aria-checked="mixed"] > .arbre-r .arbre-cc::before { background: var(--pri); }
 [aria-checked="true"] > .arbre-r .arbre-cc::after { content: ''; position: absolute; inset: 0; background: #fff; clip-path: polygon(18% 52%, 30% 40%, 43% 53%, 72% 24%, 84% 36%, 43% 77%); }
 [aria-checked="mixed"] > .arbre-r .arbre-cc::after { content: ''; position: absolute; left: 4px; right: 4px; top: 7px; height: 2px; background: #fff; }
-@media (pointer: coarse) { .arbre-r { min-height: 44px; } }
+@media (pointer: coarse) { .arbre-r { min-height: var(--ligne-tap, var(--tap)); } }
+
+/* ── En-tête de panneau, barre d'outils dense (12/11/2026, 1.22.0, specs/densite-outil.md) ──────────────
+   Pour les écrans à panneaux (densité outil, mais valables partout).
+   En-tête : div.pan-t > h2 (titre) + span.pan-m (chemin, état ; tronqué par le début) + div.pan-a > boutons-icônes
+   (button.bw.vfw.ibtn > .b.ghost). Une seule ligne, haute d'un bouton plus 8 px.
+   Barre d'outils : div.barre-o > div.fw.vfw (> .cs.acc.cut > .in.cut2 > svg.ic + input) + boutons-icônes (.b.sec).
+   Au doigt : les actions s'écartent pour que leurs zones ne se chevauchent pas, la barre d'outils passe à --tap. */
+.pan-t { display: flex; align-items: center; gap: var(--s-2); min-height: calc(var(--bh) + var(--s-2)); padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3); border-bottom: 1px solid var(--stroke); }
+.pan-t > h2, .pan-t > h3 { margin: 0; flex: none; font: 600 var(--t-sm)/1.2 'Saira', sans-serif; font-stretch: var(--saira-w); }
+.pan-m { flex: 1; min-width: 0; font-size: var(--t-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; } /* un chemin trop long perd son début */
+.pan-a { flex: none; display: flex; gap: var(--s-1); margin-left: auto; }
+.barre-o { display: flex; align-items: center; gap: var(--s-1); padding: var(--s-2) var(--s-2) var(--s-1); }
+.barre-o > .fw { flex: 1; min-width: 0; }
+.barre-o > .fw .cs > .in { gap: var(--s-2); padding-left: var(--s-2); }
+.barre-o > .fw .ic { color: var(--muted); }
+.barre-o > .fw input { height: var(--bh); padding: 0 var(--s-2) 0 0; font-size: var(--t-sm); }
+.barre-o > .fw input::placeholder { color: var(--muted); opacity: 1; }
+@media (pointer: coarse) { .pan-a { gap: calc(var(--tap) - var(--bh)); } .barre-o { --bh: var(--tap); } }
+
+/* raccourci clavier dans une commande (bouton, onglet, option) : masqué au doigt, il n'y a pas de clavier */
+@media (pointer: coarse) { :is(button, a, [role="tab"], [role="option"], [role="menuitem"]) :is(.kb, .kb-plus) { display: none; } }
 
 /* ── Vues de calendrier (06/11/2026, 1.18.0, specs/calendrier-vues.md) ───────────────
    Piste D (choix de Julien) : la grille de A (rendez-vous écrits dans les cases, semaine en grille horaire) et, dessous,
@@ -1286,7 +1329,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .calv-leg { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: var(--t-xs); color: var(--muted); }
 .calv-leg > span { display: inline-flex; align-items: center; gap: var(--s-2); }
 .calv-leg i { width: 9px; height: 7.8px; background: var(--k); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
-@media (pointer: coarse) { .calv-vb { height: 44px; } .calv-vb.fl { width: 44px; } }
+@media (pointer: coarse) { .calv-vb { height: var(--tap); } .calv-vb.fl { width: var(--tap); } }
 
 /* ── Kanban (06/11/2026, 1.18.0, specs/kanban.md) ──────────────────────────────────────
    Piste B : colonnes en blocs coupés, hexagone de couleur de l'étape (--k) devant le nom, cartes de la charte. Glisser (les
@@ -1297,7 +1340,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .kanban-z.glisse { scroll-snap-type: none; }
 .kcol { --c: var(--c-card); display: grid; align-content: start; gap: var(--s-2); min-height: 200px; padding: var(--s-2); background: var(--card2); scroll-snap-align: start; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% calc(var(--c) * 1.732), 100% calc(100% - var(--c) * 1.732), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c) * 1.732), 0 calc(var(--c) * 1.732)); transition: background var(--dh) var(--ease); }
 .kcol.cible { background: var(--selBg); }
-.kcol-t { display: flex; align-items: center; gap: var(--s-2); margin: 0; padding: var(--s-1) 2px; font: 600 var(--t-sm)/1.3 'Saira', sans-serif; font-stretch: 110%; }
+.kcol-t { display: flex; align-items: center; gap: var(--s-2); margin: 0; padding: var(--s-1) 2px; font: 600 var(--t-sm)/1.3 'Saira', sans-serif; font-stretch: var(--saira-w); }
 .kcol-t::before { content: ''; flex: none; width: 9px; height: 7.8px; background: var(--k, var(--muted)); clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); }
 .kcol-t > .nb { font-size: var(--t-xs); font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
 .kc { --c: var(--c-row); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; outline: none; }
@@ -1380,7 +1423,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .ep-t { flex: 1 1 240px; min-width: 0; display: grid; gap: 2px; }
 .ep-h { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-1) var(--s-2); }
 .ep-titre { font: 600 var(--t-2xl)/1.15 'Déclic', 'Saira', sans-serif; text-wrap: balance; }
-.ep-h .badge { font-family: 'Saira', sans-serif; font-stretch: 110%; }
+.ep-h .badge { font-family: 'Saira', sans-serif; font-stretch: var(--saira-w); }
 .ep-phrase { margin: 0; font-size: var(--t-sm); color: var(--muted); max-width: 72ch; line-height: 1.5; }
 .ep-act { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
 .ep-plus-auto { display: none; }
@@ -1388,7 +1431,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .ep-meta b { color: var(--text); font-weight: 500; }
 .ep > .tabs { margin-top: var(--s-1); }
 @container ep (max-width: 479.98px) {
-  .ep > .bc ol { display: none; } .ep > .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: 44px; }
+  .ep > .bc ol { display: none; } .ep > .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: var(--tap); }
   .ep-l { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s-1) var(--s-3); } .ep-t { display: contents; }
   .ep-h { grid-column: 1; } .ep-act { grid-column: 2; grid-row: 1; align-self: start; flex-wrap: nowrap; } .ep-phrase { grid-column: 1 / -1; }
   .ep-titre { font-size: var(--t-xl); }
@@ -1425,7 +1468,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
   clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--v), 100% calc(100% - var(--ph) - var(--v)), calc(100% - var(--c)) calc(100% - var(--ph)), calc(var(--ax) + var(--pw)) calc(100% - var(--ph)), var(--ax) 100%, calc(var(--ax) - var(--pw)) calc(100% - var(--ph)), var(--c) calc(100% - var(--ph)), 0 calc(100% - var(--ph) - var(--v)), 0 var(--v)); }
 .bul[data-p="bottom"] > span { padding-top: calc(7px + var(--ph));
   clip-path: polygon(var(--c) var(--ph), calc(var(--ax) - var(--pw)) var(--ph), var(--ax) 0, calc(var(--ax) + var(--pw)) var(--ph), calc(100% - var(--c)) var(--ph), 100% calc(var(--ph) + var(--v)), 100% calc(100% - var(--v)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--v)), 0 calc(var(--ph) + var(--v))); }
-.bul kbd { font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: 110%; --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
+.bul kbd { font: 500 var(--t-xs)/1 'Saira', sans-serif; font-stretch: var(--saira-w); --c: var(--c-badge); background: var(--card); color: var(--muted); padding: 3px var(--s-2); }
 .tip { position: fixed; left: 0; top: 0; z-index: var(--z-bulle); opacity: 0; transform: translateY(var(--ty, 4px)); transition: opacity var(--dh) var(--ease), transform var(--dh) var(--ease); }
 .tip.show { opacity: 1; transform: none; }
 .tip-cible { --c: var(--c-btn); width: 34px; height: 34px; background: var(--secBg); } /* faux bouton, pour les aperçus figés */
@@ -1459,7 +1502,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .bc .bc-back::after { display: none; }
 @container (max-width: 360px) {
   .bc ol { display: none; }
-  .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: 44px; }
+  .bc .bc-back { display: inline-flex; align-items: center; font-size: var(--t-sm); font-weight: 500; min-height: var(--tap); }
 }
 
 /* ── Barre de progression ───────────────────────────────────────────────────
@@ -1496,7 +1539,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 @container (max-width: 340px) { .stat > .in { grid-template-columns: minmax(0, 1fr); } }
 .st-main { min-width: 0; }
 .st-l { margin: 0; font-size: var(--t-sm); color: var(--muted); }
-.st-v { margin: 2px 0 var(--s-2); font: 600 var(--t-2xl)/1.1 'Saira', sans-serif; font-stretch: 110%; font-variant-numeric: tabular-nums; }
+.st-v { margin: 2px 0 var(--s-2); font: 600 var(--t-2xl)/1.1 'Saira', sans-serif; font-stretch: var(--saira-w); font-variant-numeric: tabular-nums; }
 .st-f { margin: 0; display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
 .st-f .badge { display: inline-flex; align-items: center; gap: var(--s-1); }
 .st-s { font-size: var(--t-xs); color: var(--muted); }
@@ -1588,7 +1631,7 @@ input[data-code].code-src { position: absolute; width: 1px; height: 1px; opacity
 .gr-z svg { display: block; width: 100%; overflow: visible; }
 .gr-z svg:focus { outline: none; }
 .gr-z svg:focus-visible { outline: 1.5px solid var(--focus); outline-offset: 4px; }
-.gr-z text { font: 11px 'Saira', sans-serif; font-stretch: 110%; fill: var(--muted); }
+.gr-z text { font: 11px 'Saira', sans-serif; font-stretch: var(--saira-w); fill: var(--muted); }
 .gr-z text.gr-in { font-weight: 600; pointer-events: none; }
 .gr-z text.gr-c1 { font: 600 28px 'Déclic', 'Saira', sans-serif; fill: var(--text); }
 .gr-g { stroke: var(--border); } .gr-base { stroke: var(--edgeStrong); } .gr-ret { stroke: var(--edgeStrong); }
