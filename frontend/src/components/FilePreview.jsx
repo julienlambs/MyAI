@@ -63,9 +63,9 @@ function PdfPreview({ url }) {
       <canvas ref={canvasRef} />
       {numPages > 1 && (
         <div className="pdf-preview-nav">
-          <IconBtn className="bw vfw ibtn" kind="ghost" label="Page précédente" icon={<Icone nom="retour" />} disabled={pageNum <= 1} onClick={() => setPageNum((p) => p - 1)} />
+          <IconBtn kind="ghost" label="Page précédente" icon={<Icone nom="retour" />} disabled={pageNum <= 1} onClick={() => setPageNum((p) => p - 1)} />
           <span>{pageNum} / {numPages}</span>
-          <IconBtn className="bw vfw ibtn" kind="ghost" label="Page suivante" icon={<Icone nom="suivant" />} disabled={pageNum >= numPages} onClick={() => setPageNum((p) => p + 1)} />
+          <IconBtn kind="ghost" label="Page suivante" icon={<Icone nom="suivant" />} disabled={pageNum >= numPages} onClick={() => setPageNum((p) => p + 1)} />
         </div>
       )}
     </div>

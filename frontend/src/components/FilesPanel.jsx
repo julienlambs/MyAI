@@ -3,7 +3,7 @@ import { useAgentSocket } from '../lib/useAgentSocket'
 import { usePanelBridge } from '../lib/usePanelBridge'
 import { useDialogs } from '../lib/useDialogs'
 import FilePreview from './FilePreview'
-import { Btn, Field, IconBtn, Icone, Touche } from '@declic/ui'
+import { BarreOutils, Btn, EnTetePanneau, IconBtn, Icone, Touche } from '@declic/ui'
 import { MenuPop, MenuItem, MenuSep } from './MenuPop'
 
 // Toutes les lignes de l'arbre font la même hauteur (une seule ligne de
@@ -557,78 +557,65 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
   return (
     <div className="panel is-main coupe" style={{ gridArea }} data-slot={gridArea}>
       <div className="panel-full">
-        <div className="section-header">
-          <div className="section-title-row">
-            <div className="section-title">
-              <Icone nom="dossier" className="sym" />
-              <h2 className="name">Explorateur</h2>
-              <span className="badge cut bg-neu">{countLoaded(childrenByPath, showHidden)} fichiers</span>
-            </div>
-            <div className="section-actions">
-              {variant !== 'full' && (
-                <IconBtn className="bw vfw ibtn" kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
-              )}
-              <span className="kbd"><Touche>Ctrl 2</Touche></span>
-            </div>
-          </div>
-          <div className="files-breadcrumb">
-            <IconBtn className="bw vfw ibtn"
-              kind="ghost"
-              onClick={goToParent}
-              disabled={!parentAvailable}
-              label={parentAvailable ? 'Remonter au dossier parent' : 'Déjà à la racine du disque'}
-              icon={<Icone nom="monter" />}
-            />
-            <span className="files-root-path" data-tip={root ?? ''}>{root ?? '—'}</span>
-            {root !== cwd && (
-              <IconBtn className="bw vfw ibtn" kind="ghost" onClick={goHome} label="Revenir au dossier du projet" icon={<Icone nom="accueil" />} />
-            )}
-          </div>
-          <div className="files-toolbar">
-            <div className="files-search">
-              <Field
-                label={searchMode === 'content' ? 'Rechercher dans le contenu' : 'Filtrer les fichiers'}
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
-            </div>
-            <IconBtn className="bw vfw ibtn"
-              kind={searchMode === 'content' ? 'pri' : 'sec'}
-              aria-pressed={searchMode === 'content'}
-              onClick={() => { setSearchMode((m) => (m === 'content' ? 'name' : 'content')); setFilter('') }}
-              label={searchMode === 'content' ? 'Revenir à la recherche par nom' : 'Rechercher dans le contenu des fichiers'}
-              icon={<Icone nom="recherche" />}
-            />
-            <IconBtn className="bw vfw ibtn"
-              aria-pressed={showHidden}
-              onClick={() => setShowHidden((v) => !v)}
-              label={showHidden ? 'Masquer les fichiers cachés et node_modules' : 'Afficher les fichiers cachés et node_modules'}
-              icon={<Icone nom={showHidden ? 'oeil' : 'oeil-barre'} />}
-            />
-            <IconBtn className="bw vfw ibtn"
-              onClick={refreshAll}
-              disabled={refreshing}
-              label="Rafraîchir"
-              icon={refreshing ? <declic-loader size="16" mono /> : <Icone nom="recharger" />}
-            />
-            <IconBtn className="bw vfw ibtn" ref={sortBtnRef} label="Trier" icon={<Icone nom="trier" />}
-              aria-haspopup="menu" aria-expanded={sortMenuOpen} onClick={() => setSortMenuOpen((v) => !v)} />
-            <MenuPop anchorRef={sortBtnRef} open={sortMenuOpen} onClose={() => setSortMenuOpen(false)} width={220} label="Trier">
-              {SORT_OPTIONS.map((opt) => (
-                <MenuItem key={opt.id} label={opt.label} checked={sortBy === opt.id}
-                  onSelect={() => { setSortBy(opt.id); setSortMenuOpen(false) }} />
-              ))}
-              <MenuSep />
-              <MenuItem label="Dossiers d’abord" checked={foldersFirst} onSelect={() => setFoldersFirst((v) => !v)} />
-            </MenuPop>
-            <IconBtn className="bw vfw ibtn" ref={createBtnRef} label="Créer à la racine" icon={<Icone nom="ajouter" />}
-              aria-haspopup="menu" aria-expanded={createMenuOpen} onClick={() => setCreateMenuOpen((v) => !v)} />
-            <MenuPop anchorRef={createBtnRef} open={createMenuOpen} onClose={() => setCreateMenuOpen(false)} width={220} label="Créer">
-              <MenuItem icon="fichier" label="Nouveau fichier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'file') }} />
-              <MenuItem icon="dossier" label="Nouveau dossier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'folder') }} />
-            </MenuPop>
-          </div>
-        </div>
+        <EnTetePanneau titre="Explorateur" meta={root ?? '—'} actions={<>
+          <IconBtn
+            kind="ghost"
+            onClick={goToParent}
+            disabled={!parentAvailable}
+            label={parentAvailable ? 'Remonter au dossier parent' : 'Déjà à la racine du disque'}
+            icon={<Icone nom="monter" />}
+          />
+          {root !== cwd && (
+            <IconBtn kind="ghost" onClick={goHome} label="Revenir au dossier du projet" icon={<Icone nom="accueil" />} />
+          )}
+          {variant !== 'full' && (
+            <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
+          )}
+          <span className="kbd"><Touche>Ctrl 2</Touche></span>
+        </>} />
+        <BarreOutils
+          filtre={filter}
+          onFiltre={setFilter}
+          label={searchMode === 'content' ? 'Rechercher dans le contenu' : 'Filtrer les fichiers'}
+          placeholder={searchMode === 'content' ? 'Rechercher dans le contenu' : 'Filtrer'}
+          icone={searchMode === 'content' ? 'recherche' : 'filtrer'}
+        >
+          <IconBtn
+            kind={searchMode === 'content' ? 'pri' : 'sec'}
+            aria-pressed={searchMode === 'content'}
+            onClick={() => { setSearchMode((m) => (m === 'content' ? 'name' : 'content')); setFilter('') }}
+            label={searchMode === 'content' ? 'Revenir à la recherche par nom' : 'Rechercher dans le contenu des fichiers'}
+            icon={<Icone nom="recherche" />}
+          />
+          <IconBtn
+            aria-pressed={showHidden}
+            onClick={() => setShowHidden((v) => !v)}
+            label={showHidden ? 'Masquer les fichiers cachés et node_modules' : 'Afficher les fichiers cachés et node_modules'}
+            icon={<Icone nom={showHidden ? 'oeil' : 'oeil-barre'} />}
+          />
+          <IconBtn
+            onClick={refreshAll}
+            disabled={refreshing}
+            label="Rafraîchir"
+            icon={refreshing ? <declic-loader size="16" mono /> : <Icone nom="recharger" />}
+          />
+          <IconBtn ref={sortBtnRef} label="Trier" icon={<Icone nom="trier" />}
+            aria-haspopup="menu" aria-expanded={sortMenuOpen} onClick={() => setSortMenuOpen((v) => !v)} />
+          <MenuPop anchorRef={sortBtnRef} open={sortMenuOpen} onClose={() => setSortMenuOpen(false)} width={220} label="Trier">
+            {SORT_OPTIONS.map((opt) => (
+              <MenuItem key={opt.id} label={opt.label} checked={sortBy === opt.id}
+                onSelect={() => { setSortBy(opt.id); setSortMenuOpen(false) }} />
+            ))}
+            <MenuSep />
+            <MenuItem label="Dossiers d’abord" checked={foldersFirst} onSelect={() => setFoldersFirst((v) => !v)} />
+          </MenuPop>
+          <IconBtn ref={createBtnRef} label="Créer à la racine" icon={<Icone nom="ajouter" />}
+            aria-haspopup="menu" aria-expanded={createMenuOpen} onClick={() => setCreateMenuOpen((v) => !v)} />
+          <MenuPop anchorRef={createBtnRef} open={createMenuOpen} onClose={() => setCreateMenuOpen(false)} width={220} label="Créer">
+            <MenuItem icon="fichier" label="Nouveau fichier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'file') }} />
+            <MenuItem icon="dossier" label="Nouveau dossier" onSelect={() => { setCreateMenuOpen(false); handleCreate('', 'folder') }} />
+          </MenuPop>
+        </BarreOutils>
 
         <div className="tree" tabIndex={0} aria-label="Arborescence des fichiers" onKeyDown={handleTreeKeyDown} onScroll={handleTreeScroll} ref={treeRef}>
           {error && <div className="tree-error"><span className="badge cut bg-hi"><Icone nom="erreur" /> {error}</span></div>}
@@ -733,7 +720,7 @@ export default function FilesPanel({ variant, gridArea, onActivate }) {
         {selectedItem?.type === 'file' && <FilePreview preview={preview} gitStatus={selectedItem.gitStatus} root={root} />}
 
         <div className="file-footer">
-          <span className="file-footer-name">{selCount > 1 ? `${selCount} éléments sélectionnés` : (selectedItem?.name ?? cwd ?? '—')}</span>
+          <span className="file-footer-name">{selCount > 1 ? `${selCount} éléments sélectionnés` : (selectedItem?.name ?? `${countLoaded(childrenByPath, showHidden)} fichiers`)}</span>
           {(selectedItem || selCount > 1)
             ? (
               <span className="file-footer-actions">

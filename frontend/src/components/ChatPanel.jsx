@@ -7,7 +7,7 @@ import { usePanelBridge } from '../lib/usePanelBridge'
 import { useDialogs } from '../lib/useDialogs'
 import { randomPhrase } from '../lib/loadingPhrases'
 import DiffView from './DiffView'
-import { Btn, Field, IconBtn, Icone, Touche } from '@declic/ui'
+import { Btn, EnTetePanneau, Field, IconBtn, Icone, Touche } from '@declic/ui'
 import { MenuPop, MenuItem, MenuGroupe, MenuSep } from './MenuPop'
 
 // Au-delà, le composeur scrolle en interne plutôt que de continuer à grandir —
@@ -313,7 +313,6 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
   const [dragOver, setDragOver] = useState(false)
   const [showNewSessionForm, setShowNewSessionForm] = useState(false)
   const [newSessionPath, setNewSessionPath] = useState('')
-  const [cwdExpanded, setCwdExpanded] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef(null)
   const [hideThoughts, setHideThoughts] = useState(false)
@@ -438,67 +437,48 @@ export default function ChatPanel({ variant, gridArea, onActivate }) {
   return (
     <div className="panel is-main coupe" style={{ gridArea }} data-slot={gridArea}>
       <div className="panel-full">
-        <div className="section-header">
-          <div className="section-title-row">
-            <div className="section-title">
-              <Icone nom="bulle" className="sym" />
-              <h2 className="name">Chat</h2>
-              <span className="badge cut bg-neu model-pill">qwen-code</span>
-              {cwd && (
-                <button
-                  type="button"
-                  className={`badge cut bg-neu cwd-pill${cwdExpanded ? ' expanded' : ''}`}
-                  data-tip={cwdExpanded ? undefined : cwd}
-                  aria-expanded={cwdExpanded}
-                  onClick={() => setCwdExpanded((v) => !v)}
-                >
-                  {cwd}
-                </button>
-              )}
-            </div>
-            <div className="section-actions">
-              {variant !== 'full' && (
-                <IconBtn className="bw vfw ibtn" kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
-              )}
-              <Btn
-                kind="ghost"
-                className="desktop-only-btn"
-                aria-pressed={!hideThoughts}
-                icon={<Icone nom={hideThoughts ? 'oeil-barre' : 'oeil'} />}
-                onClick={() => setHideThoughts((v) => !v)}
-                data-tip="Masquer ou afficher le raisonnement de l’agent"
-              >
-                Raisonnement
-              </Btn>
-              <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="reduire" />} onClick={compact}
-                data-tip="Compacter le contexte (/compress)">
-                Compacter
-              </Btn>
-              <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="ajouter" />} onClick={handleOpenNewSessionForm}
-                data-tip="Démarrer une nouvelle session dans un autre dossier">
-                Nouvelle session
-              </Btn>
-              <SessionHistory cwd={cwd} />
-              <div className="mobile-menu-wrap">
-                <IconBtn className="bw vfw ibtn" kind="ghost" ref={mobileMenuRef} label="Plus d’options" icon={<Icone nom="plus-options" />}
-                  aria-haspopup="menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
-                <MenuPop anchorRef={mobileMenuRef} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}
-                  width="panel" label="Options du chat">
-                  <MenuGroupe>qwen-code{cwd ? ` · ${cwd}` : ''}</MenuGroupe>
-                  <MenuItem icon={hideThoughts ? 'oeil' : 'oeil-barre'}
-                    label={hideThoughts ? 'Afficher le raisonnement' : 'Masquer le raisonnement'}
-                    onSelect={() => { setMobileMenuOpen(false); setHideThoughts((v) => !v) }} />
-                  <MenuItem icon="reduire" label="Compacter le contexte" onSelect={() => { setMobileMenuOpen(false); compact() }} />
-                  <MenuItem icon="ajouter" label="Nouvelle session" onSelect={() => { setMobileMenuOpen(false); handleOpenNewSessionForm() }} />
-                  <MenuSep />
-                  <MenuGroupe>Sessions</MenuGroupe>
-                  <SessionList cwd={cwd} onClose={() => setMobileMenuOpen(false)} />
-                </MenuPop>
-              </div>
-              <span className="kbd"><Touche>Ctrl 1</Touche></span>
-            </div>
+        <EnTetePanneau titre="Chat" meta={cwd} actions={<>
+          {variant !== 'full' && (
+            <IconBtn kind="ghost" label="Agrandir ce panneau" icon={<Icone nom="plein-ecran" />} onClick={onActivate} />
+          )}
+          <Btn
+            kind="ghost"
+            className="desktop-only-btn"
+            aria-pressed={!hideThoughts}
+            icon={<Icone nom={hideThoughts ? 'oeil-barre' : 'oeil'} />}
+            onClick={() => setHideThoughts((v) => !v)}
+            data-tip="Masquer ou afficher le raisonnement de l’agent"
+          >
+            Raisonnement
+          </Btn>
+          <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="reduire" />} onClick={compact}
+            data-tip="Compacter le contexte (/compress)">
+            Compacter
+          </Btn>
+          <Btn kind="ghost" className="desktop-only-btn" icon={<Icone nom="ajouter" />} onClick={handleOpenNewSessionForm}
+            data-tip="Démarrer une nouvelle session dans un autre dossier">
+            Nouvelle session
+          </Btn>
+          <SessionHistory cwd={cwd} />
+          <div className="mobile-menu-wrap">
+            <IconBtn kind="ghost" ref={mobileMenuRef} label="Plus d’options" icon={<Icone nom="plus-options" />}
+              aria-haspopup="menu" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen((v) => !v)} />
+            <MenuPop anchorRef={mobileMenuRef} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)}
+              width="panel" label="Options du chat">
+              <MenuGroupe>qwen-code{cwd ? ` · ${cwd}` : ''}</MenuGroupe>
+              <MenuItem icon={hideThoughts ? 'oeil' : 'oeil-barre'}
+                label={hideThoughts ? 'Afficher le raisonnement' : 'Masquer le raisonnement'}
+                onSelect={() => { setMobileMenuOpen(false); setHideThoughts((v) => !v) }} />
+              <MenuItem icon="reduire" label="Compacter le contexte" onSelect={() => { setMobileMenuOpen(false); compact() }} />
+              <MenuItem icon="ajouter" label="Nouvelle session" onSelect={() => { setMobileMenuOpen(false); handleOpenNewSessionForm() }} />
+              <MenuSep />
+              <MenuGroupe>Sessions</MenuGroupe>
+              <SessionList cwd={cwd} onClose={() => setMobileMenuOpen(false)} />
+            </MenuPop>
           </div>
-
+          <span className="kbd"><Touche>Ctrl 1</Touche></span>
+        </>} />
+        <div className="section-header">
           {showNewSessionForm && (
             <div className="new-session-form">
               <Field

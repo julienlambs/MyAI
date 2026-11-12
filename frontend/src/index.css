@@ -56,18 +56,13 @@ body { overflow: hidden; }
    carte pleinement interactive), pas à celle de la fenêtre. */
 .panel-full { display: flex; flex-direction: column; height: 100%; min-height: 0; container-type: inline-size; }
 
-.section-header { padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.section-title-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-3); }
-.section-title { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
-.section-title .sym { color: var(--muted); flex-shrink: 0; }
-.section-title .name { font-weight: 600; font-size: var(--t-lg); line-height: 1.2; }
-.section-title .badge { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; } /* carte étroite : le badge se tronque au lieu de passer sous le raccourci */
-.section-actions { display: flex; align-items: center; gap: var(--s-2); flex-shrink: 0; }
+/* En-têtes de panneaux : EnTetePanneau et BarreOutils de la charte (1.22.0). Reste ici le bloc sous l'en-tête du chat
+   (nouvelle session, jauge de contexte) et les actions de la barre d'onglets du terminal. */
+.section-header { padding: var(--s-2) var(--s-3); border-bottom: 1px solid var(--stroke); flex-shrink: 0; }
+.section-actions { display: flex; align-items: center; gap: var(--s-1); flex-shrink: 0; }
+.pan-t, .barre-o { flex-shrink: 0; }
 .kbd { display: inline-flex; }
-
-/* Badge du dossier de session : un bouton (déplie le chemin complet au clic), habillé en badge neutre. */
-.cwd-pill { border: 0; font-family: inherit; font-stretch: inherit; cursor: pointer; /* un <button> n'hérite ni de la police ni de la largeur 110 % */ max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cwd-pill.expanded { max-width: none; white-space: normal; word-break: break-all; }
+@media (pointer: coarse) { .kbd, .kbd-hint { display: none; } } /* pas de clavier au doigt (la charte ne masque que les .kb dans une commande) */
 
 /* Jauge de contexte façon barre de ressource : dégradé lo → md → hi, recouvert au-delà du % utilisé. */
 .context-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); margin-bottom: var(--s-2); }
@@ -168,11 +163,6 @@ body { overflow: hidden; }
 .new-session-form .field { flex: 1; margin-bottom: 0; }
 
 /* ── Explorateur ── */
-.files-breadcrumb { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-2); }
-.files-root-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; font-size: var(--t-xs); color: var(--muted); font-family: var(--font-mono); }
-.files-toolbar { display: flex; align-items: center; gap: var(--s-1); flex-wrap: wrap; }
-.files-search { flex: 1; min-width: 160px; }
-.files-search .field { margin-bottom: 0; }
 .tree { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-2); outline: none; }
 .tree:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; } /* l'arbre se parcourt aux flèches : son focus doit se voir */
 .tree-error { padding: var(--s-3); }
@@ -207,7 +197,7 @@ body { overflow: hidden; }
 .pdf-preview-nav { display: flex; align-items: center; gap: var(--s-3); font-size: var(--t-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ── Terminal ── */
-.term-tabbar { display: flex; align-items: center; justify-content: space-between; padding: var(--s-2) var(--s-4); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: var(--s-3); }
+.term-tabbar { display: flex; align-items: center; justify-content: space-between; min-height: calc(var(--bh) + var(--s-2)); padding: var(--s-1) var(--s-1) var(--s-1) var(--s-2); border-bottom: 1px solid var(--stroke); flex-shrink: 0; gap: var(--s-2); } /* même gabarit que .pan-t */
 .term-tabs-wrap { display: flex; align-items: center; gap: var(--s-2); min-width: 120px; flex: 1; }
 /* Panneau étroit (carte secondaire) : le bouton « Envoyer au chat » garde son icône seule, sinon les onglets n'ont plus de place. */
 @container (max-width: 480px) { .term-send-label { display: none; } }
@@ -215,8 +205,7 @@ body { overflow: hidden; }
 .term-tab { --c: var(--c-tab); display: flex; align-items: center; flex-shrink: 0; color: var(--muted); transition: background var(--dh) var(--ease); }
 .term-tab:hover { background: var(--card2); }
 .term-tab.active { background: var(--card2); color: var(--text); box-shadow: inset 0 -2px var(--acc); }
-.term-tab .bw { --bh: 28px; }
-.term-tab-btn { display: flex; align-items: center; gap: var(--s-2); height: 32px; padding: 0 var(--s-3); background: none; border: 0; color: inherit; font: inherit; font-size: var(--t-xs); cursor: pointer; white-space: nowrap; }
+.term-tab-btn { display: flex; align-items: center; gap: var(--s-2); height: var(--bh); padding: 0 var(--s-3); background: none; border: 0; color: inherit; font: inherit; font-size: var(--t-xs); cursor: pointer; white-space: nowrap; }
 .term-tab-btn:focus-visible { outline: 1.5px solid var(--focus); outline-offset: -2px; }
 .term-status { padding: var(--s-2) var(--s-3) 0; }
 .term-screen { flex: 1; min-height: 0; padding: var(--s-2) var(--s-3); }
@@ -290,10 +279,9 @@ body { overflow: hidden; }
 
   /* En-tête de panneau tout aussi compact : titre + un seul menu, le reste
      (badge modèle, chemin, actions) passe dans le menu mobile. */
-  .model-pill, .cwd-pill, .kbd { display: none; }
+  .kbd { display: none; }
   .desktop-only-btn { display: none; }
   .mobile-menu-wrap { display: block; }
-  .section-header { padding: var(--s-3) var(--s-4) var(--s-2); }
   .context-row { margin-bottom: var(--s-1); }
   .composer-zone { padding: var(--s-3) var(--s-4); }
 
